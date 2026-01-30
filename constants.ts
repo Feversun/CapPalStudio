@@ -99,61 +99,61 @@ export const GET_MOTION_DESCRIPTION = (mode: string): string => {
   return "Standard smooth animation movement.";
 };
 
-// --- MODULE 1: PASSIVE IDLE ---
+// --- MODULE 1: IDLE ---
 
 export const IDLE_DEFAULTS: SheetActionItem[] = [
-  { label: "Idle_LookAround", description: "", enabled: true },
-  { label: "Idle_Neutral", description: "", enabled: true },
-  { label: "Idle_Thinking", description: "", enabled: true },
-  { label: "Idle_Sleepy", description: "", enabled: true },
-  { label: "Idle_Shy", description: "", enabled: true }
+  { label: "Neutral", description: "Default standing pose. Breathing motion. Occasional blink.", enabled: true },
+  { label: "Look Around", description: "Head turns left/right. Curious scanning motion.", enabled: true },
+  { label: "Thinking", description: "Head tilt, paw/hand on chin. Pondering expression.", enabled: true },
+  { label: "Sleepy", description: "Droopy eyes, yawning. Slow breathing. Cozy vibe.", enabled: true },
+  { label: "Shy", description: "Looking down, fidgeting. Ear/tail tuck if applicable.", enabled: true }
 ];
 
-// --- MODULE 2: EMOTE (LOUD IDLE) ---
+// --- MODULE 2: EMOTE ---
 
 export const EMOTE_DEFAULTS: SheetActionItem[] = [
-  { label: "Emote_Laugh", description: "", enabled: true },
-  { label: "Emote_Angry", description: "", enabled: true },
-  { label: "Emote_Shock", description: "", enabled: true },
-  { label: "Emote_Joy", description: "", enabled: true },
-  { label: "Emote_Wave", description: "", enabled: true }
+  { label: "Laugh", description: "Big smile, eyes closed. Body shaking with laughter.", enabled: true },
+  { label: "Angry", description: "Furrowed brow, puffed cheeks. Stomping or fist shake.", enabled: true },
+  { label: "Shock", description: "Wide eyes, jaw drop. Jump back reaction.", enabled: true },
+  { label: "Joy", description: "Arms up celebration. Jumping with excitement.", enabled: true },
+  { label: "Wave", description: "Friendly wave. Arm raised, palm open, side to side.", enabled: true }
 ];
 
-// --- MODULE 3: ACTION (LOCOMOTION) ---
+// --- MODULE 3: ACTION ---
 
 export const ACTION_DEFAULTS: SheetActionItem[] = [
-  { label: "Loco_Walk", description: "", enabled: true },
-  { label: "Loco_Run", description: "", enabled: true },
-  { label: "Loco_Jump", description: "", enabled: true },
-  { label: "Loco_Dash", description: "", enabled: true },
-  { label: "Loco_Crouch", description: "", enabled: true }
+  { label: "Walk", description: "Standard 4-beat walk cycle. Arms swing gently. Loop-friendly.", enabled: true },
+  { label: "Run", description: "Fast running cycle. Arms pump, body leans forward. Dynamic.", enabled: true },
+  { label: "Jump", description: "Jump arc: crouch anticipation → leap → air hang → land recovery.", enabled: true },
+  { label: "Dash", description: "Quick burst forward. Speed lines. Exaggerated forward lean.", enabled: true },
+  { label: "Crouch", description: "Low crouch/sneak pose. Slow, cautious movement.", enabled: true }
 ];
 
-// --- MODULE 4: UI STATES (ONBOARDING & CONVERSION) ---
+// --- MODULE 4: UI STATES ---
 
 export const UI_UX_DEFAULTS: SheetActionItem[] = [
   {
-    label: "UI_Notif_Bell",
+    label: "Bell",
     description: "For Notification Access. Character hugging a large Golden Bell. Eyes wide and pleading (puppy eyes). Cute and begging.",
     enabled: true
   },
   {
-    label: "UI_Offer_Gift",
+    label: "Gift",
     description: "For Special Offers. Character holding a wrapped Gift Box forward. Shyly smiling, presenting the gift to the user.",
     enabled: true
   },
   {
-    label: "UI_Sub_Heart",
+    label: "Heart",
     description: "For Premium/Paywall. Character holding a large Red Heart cushion. Rubbing cheek against it. Cozy, companionship vibe.",
     enabled: true
   },
   {
-    label: "UI_Rate_Star",
+    label: "Star",
     description: "For App Rating. Character holding a glowing Yellow Star high up above head. Proud and happy expression.",
     enabled: true
   },
   {
-    label: "UI_Please_Beg",
+    label: "Plead",
     description: "For Soft Block/Permissions. Hands clasped together in prayer/begging motion. Looking up at camera. Maximum sympathy.",
     enabled: true
   }
