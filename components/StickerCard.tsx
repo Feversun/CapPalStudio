@@ -12,15 +12,31 @@ const StickerCard: React.FC<StickerCardProps> = ({ sticker, onClick, onRegenerat
   const isGenerating = sticker.status === 'generating';
   const isFailed = sticker.status === 'failed';
 
-  const handleDownload = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
-    if (sticker.imageUrl) {
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!sticker.imageUrl) return;
+
+    const fileName = `sticker-${sticker.emotion.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.png`;
+
+    try {
+      const response = await fetch(sticker.imageUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
       const link = document.createElement('a');
-      link.href = sticker.imageUrl;
-      link.download = `sticker-${sticker.emotion.toLowerCase().replace(/\s+/g, '-')}.png`;
+      link.href = blobUrl;
+      link.download = fileName;
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      }, 100);
+    } catch (error) {
+      console.warn("Download failed", error);
+      window.open(sticker.imageUrl, '_blank');
     }
   };
 
@@ -32,7 +48,7 @@ const StickerCard: React.FC<StickerCardProps> = ({ sticker, onClick, onRegenerat
   }
 
   return (
-    <div 
+    <div
       className={`
         relative aspect-square rounded-2xl overflow-hidden border border-gray-100 bg-white shadow-sm hover:shadow-md transition-all duration-300 group
         ${isCompleted ? 'cursor-pointer hover:scale-[1.02]' : ''}
@@ -74,22 +90,22 @@ const StickerCard: React.FC<StickerCardProps> = ({ sticker, onClick, onRegenerat
       {/* Content */}
       <div className="w-full h-full flex items-center justify-center p-4">
         {isCompleted && sticker.imageUrl ? (
-          <img 
-            src={sticker.imageUrl} 
-            alt={`${sticker.emotion} sticker`} 
+          <img
+            src={sticker.imageUrl}
+            alt={`${sticker.emotion} sticker`}
             className="w-full h-full object-contain animate-fade-in drop-shadow-xl"
             loading="lazy"
           />
         ) : isGenerating ? (
           <div className="flex flex-col items-center gap-3">
-             <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-             <span className="text-xs text-gray-400 font-medium">Generating...</span>
+            <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+            <span className="text-xs text-gray-400 font-medium">Generating...</span>
           </div>
         ) : isFailed ? (
           <div className="flex flex-col items-center gap-2 text-center p-2">
             <span className="text-2xl">⚠️</span>
             <span className="text-xs text-red-400 font-medium">Failed</span>
-            <button 
+            <button
               onClick={handleRegenerate}
               className="text-[10px] bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 text-gray-600 transition-colors"
             >
