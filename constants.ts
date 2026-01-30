@@ -70,28 +70,33 @@ export const SHARED_TECHNICAL_PROMPT = `  "technical_constraints": {
     "format": "Sprite Sheet Atlas",
     "layout_enforcement": "STRICT GRID ALIGNMENT. Align sprites to the center of each grid cell.",
     "background": "Solid #FFFFFF (Pure White) - Isolated",
-    "consistency": "Strict Model Integrity (Same Character, Same Scale)",
-    "framing": "Full Body, No Cropping",
+    "consistency": "Strict Model Integrity (Same Character, Same Scale, Same Position)",
+    "framing": "Full Body, No Cropping, Center-aligned in each frame",
     "cleanliness": "NO artifacts, NO text, NO numbers, NO grid lines, NO borders around sprites, NO UI elements",
-    "spacing": "Even spacing between characters.",
+    "spacing": "Even padding between frames for easy slicing.",
     "count_limit": "MANDATORY: Fill the entire grid. Do not leave empty slots."
+  },
+  "animation_rules": {
+    "frame_transitions": "Adjacent frames MUST have smooth interpolation. No frame skipping, no sudden pose jumps, no teleporting limbs.",
+    "loop_friendly": "First and last frame should blend seamlessly for continuous loop playback.",
+    "position_lock": "Character must remain centered and consistent across all frames. No drifting or zooming."
   }`;
 
-export const SHARED_NEGATIVE_PROMPT = `["text", "watermark", "blur", "artifacts", "cropped_limbs", "extra_limbs", "dithering", "gradient_background", "shadow_clipping", "overlapping_frames", "touching_sprites", "crowded", "cluttered", "mixed_angles", "numbers", "numerals", "digits", "counting", "labels", "grid lines", "borders", "frames", "rectangles", "boxes", "ui elements", "annotations", "page numbers", "lines", "extra rows", "extra columns", "double grid"]`;
+export const SHARED_NEGATIVE_PROMPT = `["text", "watermark", "blur", "artifacts", "cropped_limbs", "extra_limbs", "dithering", "gradient_background", "shadow_clipping", "overlapping_frames", "touching_sprites", "crowded", "cluttered", "mixed_angles", "numbers", "numerals", "digits", "counting", "labels", "grid lines", "borders", "frames", "rectangles", "boxes", "ui elements", "annotations", "page numbers", "lines", "extra rows", "extra columns", "double grid", "frame skipping", "sudden jumps", "teleporting"]`;
 
-// --- HELPER: Motion Dynamics Description ---
+// --- HELPER: Motion Dynamics Description (Mode-Specific Rules) ---
 export const GET_MOTION_DESCRIPTION = (mode: string): string => {
   const m = mode.toLowerCase();
   if (m.includes('idle')) {
-    return "Subtle sub-pixel movement, breathing, blinking, minimal displacement. High consistency required.";
+    return "Breathing motion (chest/belly rise and fall) + occasional blinking (2-3 blink frames). Minimal displacement, avoid completely static frames.";
   } else if (m.includes('emote')) {
-    return "Exaggerated squash and stretch, visible emotion reaction, stationary feet but active body.";
+    return "Exaggerated squash and stretch for expressive reactions. Anticipation → Peak → Follow-through arc. Stationary feet, active upper body.";
   } else if (m.includes('action')) {
-    return "Dynamic silhouette changes, heavy displacement, clear line of action, athletic movement.";
+    return "Dynamic silhouettes with clear line of action. Frame pacing: build-up (2-3 frames) → peak action (1-2 frames) → recovery (2-3 frames).";
   } else if (m.includes('ui')) {
-    return "Character interacting with UI Props (Bell, Heart, Gift). High appeal, direct eye contact with user, persuasive and cute. Semi-stationary holding poses.";
+    return "Character holding UI Props (Bell, Heart, Gift, Star). Maintain prop visibility throughout. Subtle breathing while holding. Direct eye contact with camera.";
   }
-  return "Standard movement";
+  return "Standard smooth animation movement.";
 };
 
 // --- MODULE 1: PASSIVE IDLE ---

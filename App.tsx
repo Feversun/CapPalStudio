@@ -320,12 +320,14 @@ const App: React.FC = () => {
     // 1. Setup Stubs
     let newStickers: Sticker[] = [];
     if (mode === 'sheet') {
-      newStickers = [{
-        id: Date.now().toString(),
-        emotion: `${sheetMode.toUpperCase()} Sprite Sheet`,
+      // Create one stub per enabled action (each will generate its own sprite sheet)
+      const activeActions = spriteActions.filter(a => a.enabled !== false);
+      newStickers = activeActions.map((action, idx) => ({
+        id: `${Date.now()}-${idx}`,
+        emotion: action.label,
         emoji: '📜',
         status: 'pending'
-      }];
+      }));
     } else if (mode === 'widget') {
       newStickers = WIDGET_SCENARIOS.map((scenario, idx) => ({
         id: `${Date.now()}-${idx}`,
@@ -352,15 +354,45 @@ const App: React.FC = () => {
 
       // 2. Process
       if (mode === 'sheet') {
-        setStickers(prev => prev.map(s => ({ ...s, status: 'generating' })));
+        // NEW LOGIC: Each action item generates its OWN sprite sheet (Option B)
         const activeActions = spriteActions.filter(a => a.enabled !== false);
-        const result = await generateStickerImage(
-          masterImage || sourceImage, subjectDesc, "Sprite Sheet", selectedStyle.prompt,
-          true, activeActions, sheetPromptTemplate, gridConfig.rows, gridConfig.cols, sheetMode,
-          SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT, genConfig
-        );
-        setStickers(prev => prev.map(s => ({ ...s, imageUrl: result.imageUrl, finalPrompt: result.prompt, status: 'completed' })));
-        setQuotaUsage(prev => Math.min(prev + 5, 100));
+        const itemsToProcess = [...newStickers];
+        let currentReferenceImage = masterImage || sourceImage;
+
+        for (let i = 0; i < itemsToProcess.length; i++) {
+          const sticker = itemsToProcess[i];
+          const action = activeActions[i];
+
+          if (!action) continue; // Safety check
+
+          setStickers(prev => prev.map(s => s.id === sticker.id ? { ...s, status: 'generating' } : s));
+
+          try {
+            // Generate a single sprite sheet for THIS action only
+            const result = await generateStickerImage(
+              currentReferenceImage, subjectDesc, action.label, selectedStyle.prompt,
+              true, [action], sheetPromptTemplate, gridConfig.rows, gridConfig.cols, sheetMode,
+              SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT, genConfig
+            );
+
+            setStickers(prev => prev.map(s => s.id === sticker.id
+              ? { ...s, imageUrl: result.imageUrl, finalPrompt: result.prompt, status: 'completed' }
+              : s
+            ));
+            setQuotaUsage(prev => Math.min(prev + 3, 100));
+
+            // Use first result as reference for subsequent generations (consistency mode)
+            if (consistencyMode === 'first_result' && i === 0) {
+              currentReferenceImage = result.imageUrl;
+            }
+          } catch (err: any) {
+            console.error(`Sheet generation failed for ${action.label}`, err);
+            setStickers(prev => prev.map(s => s.id === sticker.id
+              ? { ...s, status: 'failed', error: err.message }
+              : s
+            ));
+          }
+        }
       } else {
         // Sequential Generation for Pack/Widget
         const itemsToProcess = [...newStickers];
