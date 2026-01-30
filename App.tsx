@@ -4,8 +4,8 @@ import Sidebar from './components/Sidebar';
 import StickerGrid from './components/StickerGrid';
 import SceneResults from './components/SceneResults';
 import { Sticker, GenerationStatus, StickerStyle, GenerationMode, SheetGridConfig, SheetMode, SheetActionItem, SceneHistoryItem, ConsistencyMode, GenerationConfig } from './types';
-import { 
-  EMOTIONS, STYLES, DEFAULT_STYLE_ID, 
+import {
+  EMOTIONS, STYLES, DEFAULT_STYLE_ID,
   IDLE_DEFAULTS, EMOTE_DEFAULTS, ACTION_DEFAULTS, UI_UX_DEFAULTS,
   MASTER_SHEET_PROMPT_TEMPLATE, SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT,
   WIDGET_SCENARIOS
@@ -17,119 +17,141 @@ const App: React.FC = () => {
   const [sourceImage, setSourceImage] = useState<string | null>(null);
   const [masterImage, setMasterImage] = useState<string | null>(null);
   const [stickers, setStickers] = useState<Sticker[]>([]);
-  
+
   const [mode, setMode] = useState<GenerationMode>('sheet');
   const [sheetMode, setSheetMode] = useState<SheetMode>('action');
   const [consistencyMode, setConsistencyMode] = useState<ConsistencyMode>('reference');
 
-  const [gridConfig, setGridConfig] = useState<SheetGridConfig>({ rows: 3, cols: 3 });
+  const [gridConfig, setGridConfig] = useState<SheetGridConfig>({ rows: 4, cols: 4 });
   const [spriteActions, setSpriteActions] = useState<SheetActionItem[]>(ACTION_DEFAULTS);
   const [sheetPromptTemplate, setSheetPromptTemplate] = useState<string>(MASTER_SHEET_PROMPT_TEMPLATE);
 
   const [allStyles, setAllStyles] = useState<StickerStyle[]>(STYLES);
   const [selectedStyleId, setSelectedStyleId] = useState<string>(DEFAULT_STYLE_ID);
-  
+
   const [generationStatus, setGenerationStatus] = useState<GenerationStatus>(GenerationStatus.IDLE);
-  const [analysisCache, setAnalysisCache] = useState<{id: string, subject: string, style: string} | null>(null);
-  
+  const [analysisCache, setAnalysisCache] = useState<{ id: string, subject: string, style: string } | null>(null);
+
   const [sceneHistory, setSceneHistory] = useState<SceneHistoryItem[]>([]);
   const [currentSceneImage, setCurrentSceneImage] = useState<string | null>(null);
   const [sceneAspectRatio, setSceneAspectRatio] = useState<string>('1:1');
-  
+
   const [activeTab, setActiveTab] = useState(0); // 0: Config/Inputs, 1: Results
 
-  // API Mode State
-  const [isLocalApi, setIsLocalApi] = useState(false);
+  // API Mode State - Default to LOCAL for this Antigravity version
+  const [isLocalApi, setIsLocalApi] = useState(true);
   // Fake quota tracking for demo visual
-  const [quotaUsage, setQuotaUsage] = useState(45); 
+  const [quotaUsage, setQuotaUsage] = useState(45);
   const quotaLimit = 100;
 
   // GLOBAL GENERATION CONFIG
   const [genConfig, setGenConfig] = useState<GenerationConfig>({
-      temperature: 1,
-      topP: 0.95,
-      topK: 64,
-      seed: undefined,
-      imageSize: '1K', // Default to 1K for safety
-      model: 'gemini-2.5-flash-image' // Default to Flash for broad access
+    temperature: 1,
+    topP: 0.95,
+    topK: 64,
+    seed: undefined,
+    imageSize: '1K', // Default to 1K for safety
+    model: 'gemini-3-pro-image-preview' // Use Gemini 3 Pro for best quality
   });
 
   const completedCount = stickers.filter(s => s.status === 'completed' || s.status === 'failed').length;
   const totalCount = stickers.length;
 
   useEffect(() => {
+    // Initialize Local Mode on startup
+    setForceLocalMode(true);
+
     const initLoad = async () => {
-        try {
-            const savedStyles = localStorage.getItem('stickerGen_styles');
-            if (savedStyles) setAllStyles(JSON.parse(savedStyles));
-            const savedStyleId = localStorage.getItem('stickerGen_selectedStyleId');
-            if (savedStyleId) setSelectedStyleId(savedStyleId);
-            const savedMode = localStorage.getItem('stickerGen_mode');
-            if (savedMode) setMode(savedMode as GenerationMode);
-            const savedConMode = localStorage.getItem('stickerGen_consistencyMode');
-            if (savedConMode) setConsistencyMode(savedConMode as ConsistencyMode);
-            const savedGenConfig = localStorage.getItem('stickerGen_genConfig');
-            if (savedGenConfig) setGenConfig(JSON.parse(savedGenConfig));
-        } catch(e) { console.error('Error loading prefs', e); }
+      // AUTO-CLEAR CACHE: For Local Antigravity version, always start fresh
+      // This ensures code changes take effect without manual cache clearing
+      localStorage.removeItem('stickerGen_styles');
+      localStorage.removeItem('stickerGen_selectedStyleId');
+      localStorage.removeItem('stickerGen_genConfig');
+      console.log('[Local Antigravity] Cleared all config caches for fresh start');
 
-        try {
-            const savedSource = await loadState<string>('sourceImage');
-            if (savedSource) setSourceImage(savedSource);
-            const savedMaster = await loadState<string>('masterImage');
-            if (savedMaster) setMasterImage(savedMaster);
-            
-            const savedStickers = await loadState<Sticker[]>('stickers');
-            if (savedStickers) {
-                // CLEANUP: If items were stuck in 'generating' or 'pending' state from a previous session (refresh),
-                // mark them as failed so the UI doesn't spin forever.
-                const cleanStickers = savedStickers.map(s => {
-                    if (s.status === 'generating' || s.status === 'pending') {
-                        return { ...s, status: 'failed', error: 'Interrupted' } as Sticker;
-                    }
-                    return s;
-                });
-                setStickers(cleanStickers);
-            }
+      try {
+        const savedStyles = localStorage.getItem('stickerGen_styles');
+        // Version check: If saved styles don't include new style IDs, clear cache
+        if (savedStyles) {
+          const parsed = JSON.parse(savedStyles);
+          const hasNewStyles = parsed.some((s: any) => s.id === 'acnh_villager' || s.id === 'acnh_natural');
+          if (hasNewStyles) {
+            setAllStyles(parsed);
+          } else {
+            // Clear outdated cache, use fresh defaults
+            localStorage.removeItem('stickerGen_styles');
+            localStorage.removeItem('stickerGen_selectedStyleId');
+            console.log('[App] Cleared outdated style cache, using fresh defaults');
+          }
+        }
+        const savedStyleId = localStorage.getItem('stickerGen_selectedStyleId');
+        if (savedStyleId) setSelectedStyleId(savedStyleId);
+        const savedMode = localStorage.getItem('stickerGen_mode');
+        if (savedMode) setMode(savedMode as GenerationMode);
+        const savedConMode = localStorage.getItem('stickerGen_consistencyMode');
+        if (savedConMode) setConsistencyMode(savedConMode as ConsistencyMode);
+        const savedGenConfig = localStorage.getItem('stickerGen_genConfig');
+        if (savedGenConfig) setGenConfig(JSON.parse(savedGenConfig));
+      } catch (e) { console.error('Error loading prefs', e); }
 
-            const savedHistory = await loadState<SceneHistoryItem[]>('sceneHistory');
-            if (savedHistory) {
-                 setSceneHistory(savedHistory);
-                 if (savedHistory.length > 0) setCurrentSceneImage(savedHistory[0].imageUrl);
+      try {
+        const savedSource = await loadState<string>('sourceImage');
+        if (savedSource) setSourceImage(savedSource);
+        const savedMaster = await loadState<string>('masterImage');
+        if (savedMaster) setMasterImage(savedMaster);
+
+        const savedStickers = await loadState<Sticker[]>('stickers');
+        if (savedStickers) {
+          // CLEANUP: If items were stuck in 'generating' or 'pending' state from a previous session (refresh),
+          // mark them as failed so the UI doesn't spin forever.
+          const cleanStickers = savedStickers.map(s => {
+            if (s.status === 'generating' || s.status === 'pending') {
+              return { ...s, status: 'failed', error: 'Interrupted' } as Sticker;
             }
-            const savedAnalysis = await loadState<{id: string, subject: string, style: string}>('analysis');
-            if (savedAnalysis) setAnalysisCache(savedAnalysis);
-        } catch (e) { console.error("Failed to load from DB", e); }
+            return s;
+          });
+          setStickers(cleanStickers);
+        }
+
+        const savedHistory = await loadState<SceneHistoryItem[]>('sceneHistory');
+        if (savedHistory) {
+          setSceneHistory(savedHistory);
+          if (savedHistory.length > 0) setCurrentSceneImage(savedHistory[0].imageUrl);
+        }
+        const savedAnalysis = await loadState<{ id: string, subject: string, style: string }>('analysis');
+        if (savedAnalysis) setAnalysisCache(savedAnalysis);
+      } catch (e) { console.error("Failed to load from DB", e); }
     };
     initLoad();
   }, []);
 
   useEffect(() => {
-      const saveToStorage = async () => {
-          try {
-             localStorage.setItem('stickerGen_styles', JSON.stringify(allStyles));
-             localStorage.setItem('stickerGen_selectedStyleId', selectedStyleId);
-             localStorage.setItem('stickerGen_mode', mode);
-             localStorage.setItem('stickerGen_consistencyMode', consistencyMode);
-             localStorage.setItem('stickerGen_genConfig', JSON.stringify(genConfig));
-             if (sourceImage) await saveState('sourceImage', sourceImage);
-             if (masterImage) await saveState('masterImage', masterImage);
-             await saveState('stickers', stickers);
-             await saveState('sceneHistory', sceneHistory.slice(0, 20)); 
-             if (analysisCache) await saveState('analysis', analysisCache);
-          } catch (e) { console.error("Storage save failed", e); }
-      }
-      const timeoutId = setTimeout(saveToStorage, 1000);
-      return () => clearTimeout(timeoutId);
+    const saveToStorage = async () => {
+      try {
+        localStorage.setItem('stickerGen_styles', JSON.stringify(allStyles));
+        localStorage.setItem('stickerGen_selectedStyleId', selectedStyleId);
+        localStorage.setItem('stickerGen_mode', mode);
+        localStorage.setItem('stickerGen_consistencyMode', consistencyMode);
+        localStorage.setItem('stickerGen_genConfig', JSON.stringify(genConfig));
+        if (sourceImage) await saveState('sourceImage', sourceImage);
+        if (masterImage) await saveState('masterImage', masterImage);
+        await saveState('stickers', stickers);
+        await saveState('sceneHistory', sceneHistory.slice(0, 20));
+        if (analysisCache) await saveState('analysis', analysisCache);
+      } catch (e) { console.error("Storage save failed", e); }
+    }
+    const timeoutId = setTimeout(saveToStorage, 1000);
+    return () => clearTimeout(timeoutId);
   }, [sourceImage, masterImage, stickers, allStyles, selectedStyleId, mode, analysisCache, sceneHistory, consistencyMode, genConfig]);
 
   useEffect(() => {
     if (mode === 'sheet') {
-       const assembled = MASTER_SHEET_PROMPT_TEMPLATE
-          .replace('{{technical_prompt}}', SHARED_TECHNICAL_PROMPT)
-          .replace('{{negative_prompt}}', SHARED_NEGATIVE_PROMPT);
-       setSheetPromptTemplate(assembled);
+      const assembled = MASTER_SHEET_PROMPT_TEMPLATE
+        .replace('{{technical_prompt}}', SHARED_TECHNICAL_PROMPT)
+        .replace('{{negative_prompt}}', SHARED_NEGATIVE_PROMPT);
+      setSheetPromptTemplate(assembled);
     }
-  }, [mode, sheetMode, spriteActions, gridConfig]); 
+  }, [mode, sheetMode, spriteActions, gridConfig]);
 
   const handleImageSelect = (base64OrUrl: string) => {
     setSourceImage(base64OrUrl);
@@ -160,36 +182,36 @@ const App: React.FC = () => {
     const original = STYLES.find(s => s.id === id);
     if (original) handleUpdateStyle(id, { prompt: original.prompt, name: original.name });
   };
-  
+
   const handleSpriteActionChange = (index: number, updates: Partial<SheetActionItem>) => {
     const newActions = [...spriteActions];
     newActions[index] = { ...newActions[index], ...updates };
     setSpriteActions(newActions);
   };
-  
+
   const handleModeChange = (newMode: GenerationMode) => {
     setMode(newMode);
     if (newMode !== 'scene') {
-        if (mode === 'scene') {
-            // Keep stickers if switching back from scene
-        } else {
-             // Switching between sticker modes -> reset
-             setStickers([]); 
-             setGenerationStatus(GenerationStatus.IDLE);
-        }
+      if (mode === 'scene') {
+        // Keep stickers if switching back from scene
+      } else {
+        // Switching between sticker modes -> reset
+        setStickers([]);
+        setGenerationStatus(GenerationStatus.IDLE);
+      }
     }
   };
 
   const handleSheetModeChange = (newSheetMode: SheetMode) => {
     setSheetMode(newSheetMode);
     if (newSheetMode === 'idle') {
-      setGridConfig({ rows: 3, cols: 3 });
+      setGridConfig({ rows: 4, cols: 4 });
       setSpriteActions(IDLE_DEFAULTS);
     } else if (newSheetMode === 'emote') {
-      setGridConfig({ rows: 3, cols: 3 });
+      setGridConfig({ rows: 4, cols: 4 });
       setSpriteActions(EMOTE_DEFAULTS);
     } else if (newSheetMode === 'ui') {
-      setGridConfig({ rows: 3, cols: 3 });
+      setGridConfig({ rows: 4, cols: 4 });
       setSpriteActions(UI_UX_DEFAULTS);
     } else {
       setGridConfig({ rows: 4, cols: 4 });
@@ -199,38 +221,38 @@ const App: React.FC = () => {
 
   // Toggle API Mode Handler
   const handleToggleApi = () => {
-      const newValue = !isLocalApi;
-      setIsLocalApi(newValue);
-      setForceLocalMode(newValue);
-      // Simulate resetting quota view when switching
-      if (newValue) setQuotaUsage(10); 
-      else setQuotaUsage(95); // Simulate high usage on cloud
+    const newValue = !isLocalApi;
+    setIsLocalApi(newValue);
+    setForceLocalMode(newValue);
+    // Simulate resetting quota view when switching
+    if (newValue) setQuotaUsage(10);
+    else setQuotaUsage(95); // Simulate high usage on cloud
   };
 
   const ensureAnalysis = async (): Promise<string> => {
-      if (!sourceImage) return "";
-      if (analysisCache && analysisCache.id === sourceImage.substring(0, 50)) {
-        return analysisCache.subject;
-      }
-      const analysis = await analyzeImage(sourceImage);
-      setAnalysisCache({ id: sourceImage.substring(0, 50), subject: analysis.subjectDescription, style: analysis.styleDescription });
-      return analysis.subjectDescription;
+    if (!sourceImage) return "";
+    if (analysisCache && analysisCache.id === sourceImage.substring(0, 50)) {
+      return analysisCache.subject;
+    }
+    const analysis = await analyzeImage(sourceImage);
+    setAnalysisCache({ id: sourceImage.substring(0, 50), subject: analysis.subjectDescription, style: analysis.styleDescription });
+    return analysis.subjectDescription;
   };
 
   const handleGenerateMasterCharacter = async () => {
     if (!sourceImage) return;
     setGenerationStatus(GenerationStatus.ANALYZING);
     try {
-        const subjectDesc = await ensureAnalysis();
-        const selectedStyle = allStyles.find(s => s.id === selectedStyleId) || allStyles[0];
-        setGenerationStatus(GenerationStatus.GENERATING);
-        const masterUrl = await generateMasterCharacter(sourceImage, subjectDesc, selectedStyle.prompt, genConfig);
-        setMasterImage(masterUrl);
-        setGenerationStatus(GenerationStatus.IDLE);
-        setQuotaUsage(prev => Math.min(prev + 5, 100)); // Increment fake quota
+      const subjectDesc = await ensureAnalysis();
+      const selectedStyle = allStyles.find(s => s.id === selectedStyleId) || allStyles[0];
+      setGenerationStatus(GenerationStatus.GENERATING);
+      const masterUrl = await generateMasterCharacter(sourceImage, subjectDesc, selectedStyle.prompt, genConfig);
+      setMasterImage(masterUrl);
+      setGenerationStatus(GenerationStatus.IDLE);
+      setQuotaUsage(prev => Math.min(prev + 5, 100)); // Increment fake quota
     } catch (error) {
-        console.error("Failed to generate master", error);
-        setGenerationStatus(GenerationStatus.FAILED);
+      console.error("Failed to generate master", error);
+      setGenerationStatus(GenerationStatus.FAILED);
     }
   };
 
@@ -242,43 +264,43 @@ const App: React.FC = () => {
     try {
       const subjectDesc = await ensureAnalysis();
       const selectedStyle = allStyles.find(s => s.id === selectedStyleId) || allStyles[0];
-      
+
       let imageSourceToUse = sourceImage;
       if (consistencyMode === 'reference') {
         imageSourceToUse = masterImage || sourceImage;
       } else if (consistencyMode === 'first_result') {
         if (index === 0) {
-            imageSourceToUse = sourceImage;
+          imageSourceToUse = sourceImage;
         } else {
-            const firstSticker = stickers[0];
-            if (firstSticker && firstSticker.status === 'completed' && firstSticker.imageUrl) {
-                imageSourceToUse = firstSticker.imageUrl;
-            } else {
-                imageSourceToUse = sourceImage;
-            }
+          const firstSticker = stickers[0];
+          if (firstSticker && firstSticker.status === 'completed' && firstSticker.imageUrl) {
+            imageSourceToUse = firstSticker.imageUrl;
+          } else {
+            imageSourceToUse = sourceImage;
+          }
         }
       }
-      
+
       let result;
       if (mode === 'sheet') {
-          // For sheet mode, regenerating single item means regenerating the whole sheet usually, 
-          // as the "sticker" IS the sheet in our data model for sheet mode.
-          // We pass all enabled actions.
-          const activeActions = spriteActions.filter(a => a.enabled !== false);
-          result = await generateStickerImage(
-              imageSourceToUse, subjectDesc, stickerToRegenerate.emotion, selectedStyle.prompt, 
-              true, activeActions, sheetPromptTemplate, gridConfig.rows, gridConfig.cols, sheetMode, 
-              SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT, genConfig
-          );
+        // For sheet mode, regenerating single item means regenerating the whole sheet usually, 
+        // as the "sticker" IS the sheet in our data model for sheet mode.
+        // We pass all enabled actions.
+        const activeActions = spriteActions.filter(a => a.enabled !== false);
+        result = await generateStickerImage(
+          imageSourceToUse, subjectDesc, stickerToRegenerate.emotion, selectedStyle.prompt,
+          true, activeActions, sheetPromptTemplate, gridConfig.rows, gridConfig.cols, sheetMode,
+          SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT, genConfig
+        );
       } else {
-          // Pack or Widget
-          const isWidget = mode === 'widget';
-          const moduleName = isWidget ? "WIDGET" : "EMOTE";
-          result = await generateStickerImage(
-              imageSourceToUse, subjectDesc, stickerToRegenerate.emotion, selectedStyle.prompt, 
-              false, [], "", 1, 1, moduleName, 
-              "", "", genConfig
-          );
+        // Pack or Widget
+        const isWidget = mode === 'widget';
+        const moduleName = isWidget ? "WIDGET" : "EMOTE";
+        result = await generateStickerImage(
+          imageSourceToUse, subjectDesc, stickerToRegenerate.emotion, selectedStyle.prompt,
+          false, [], "", 1, 1, moduleName,
+          "", "", genConfig
+        );
       }
 
       setStickers(prev => prev.map((s, i) => i === index ? { ...s, imageUrl: result.imageUrl, finalPrompt: result.prompt, status: 'completed' } : s));
@@ -298,152 +320,152 @@ const App: React.FC = () => {
     // 1. Setup Stubs
     let newStickers: Sticker[] = [];
     if (mode === 'sheet') {
-        newStickers = [{
-            id: Date.now().toString(),
-            emotion: `${sheetMode.toUpperCase()} Sprite Sheet`,
-            emoji: '📜',
-            status: 'pending'
-        }];
+      newStickers = [{
+        id: Date.now().toString(),
+        emotion: `${sheetMode.toUpperCase()} Sprite Sheet`,
+        emoji: '📜',
+        status: 'pending'
+      }];
     } else if (mode === 'widget') {
-        newStickers = WIDGET_SCENARIOS.map((scenario, idx) => ({
-            id: `${Date.now()}-${idx}`,
-            emotion: scenario.name, // Pass name, we will look up prompt later or pass concept
-            emoji: scenario.emoji,
-            status: 'pending'
-        }));
+      newStickers = WIDGET_SCENARIOS.map((scenario, idx) => ({
+        id: `${Date.now()}-${idx}`,
+        emotion: scenario.name, // Pass name, we will look up prompt later or pass concept
+        emoji: scenario.emoji,
+        status: 'pending'
+      }));
     } else {
-        // Pack
-        newStickers = EMOTIONS.slice(0, 8).map((emote, idx) => ({
-            id: `${Date.now()}-${idx}`,
-            emotion: emote.name,
-            emoji: emote.emoji,
-            status: 'pending'
-        }));
+      // Pack
+      newStickers = EMOTIONS.slice(0, 8).map((emote, idx) => ({
+        id: `${Date.now()}-${idx}`,
+        emotion: emote.name,
+        emoji: emote.emoji,
+        status: 'pending'
+      }));
     }
     setStickers(newStickers);
     setGenerationStatus(GenerationStatus.ANALYZING);
 
     try {
-        const subjectDesc = await ensureAnalysis();
-        const selectedStyle = allStyles.find(s => s.id === selectedStyleId) || allStyles[0];
-        setGenerationStatus(GenerationStatus.GENERATING);
+      const subjectDesc = await ensureAnalysis();
+      const selectedStyle = allStyles.find(s => s.id === selectedStyleId) || allStyles[0];
+      setGenerationStatus(GenerationStatus.GENERATING);
 
-        // 2. Process
-        if (mode === 'sheet') {
-            setStickers(prev => prev.map(s => ({ ...s, status: 'generating' })));
-            const activeActions = spriteActions.filter(a => a.enabled !== false);
-            const result = await generateStickerImage(
-                masterImage || sourceImage, subjectDesc, "Sprite Sheet", selectedStyle.prompt, 
-                true, activeActions, sheetPromptTemplate, gridConfig.rows, gridConfig.cols, sheetMode, 
-                SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT, genConfig
-            );
-            setStickers(prev => prev.map(s => ({ ...s, imageUrl: result.imageUrl, finalPrompt: result.prompt, status: 'completed' })));
-            setQuotaUsage(prev => Math.min(prev + 5, 100));
-        } else {
-            // Sequential Generation for Pack/Widget
-            const itemsToProcess = [...newStickers];
-            let processed = 0;
-            
-            // Daisy chain reference logic
-            let currentReferenceImage = masterImage || sourceImage;
+      // 2. Process
+      if (mode === 'sheet') {
+        setStickers(prev => prev.map(s => ({ ...s, status: 'generating' })));
+        const activeActions = spriteActions.filter(a => a.enabled !== false);
+        const result = await generateStickerImage(
+          masterImage || sourceImage, subjectDesc, "Sprite Sheet", selectedStyle.prompt,
+          true, activeActions, sheetPromptTemplate, gridConfig.rows, gridConfig.cols, sheetMode,
+          SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT, genConfig
+        );
+        setStickers(prev => prev.map(s => ({ ...s, imageUrl: result.imageUrl, finalPrompt: result.prompt, status: 'completed' })));
+        setQuotaUsage(prev => Math.min(prev + 5, 100));
+      } else {
+        // Sequential Generation for Pack/Widget
+        const itemsToProcess = [...newStickers];
+        let processed = 0;
 
-            for (let i = 0; i < itemsToProcess.length; i++) {
-                const sticker = itemsToProcess[i];
-                setStickers(prev => prev.map(s => s.id === sticker.id ? { ...s, status: 'generating' } : s));
+        // Daisy chain reference logic
+        let currentReferenceImage = masterImage || sourceImage;
 
-                try {
-                    let concept = sticker.emotion;
-                    if (mode === 'widget') {
-                        // Find full prompt for widget scenario
-                        const scenario = WIDGET_SCENARIOS.find(w => w.name === sticker.emotion);
-                        if (scenario) concept = scenario.prompt;
-                    }
+        for (let i = 0; i < itemsToProcess.length; i++) {
+          const sticker = itemsToProcess[i];
+          setStickers(prev => prev.map(s => s.id === sticker.id ? { ...s, status: 'generating' } : s));
 
-                    const result = await generateStickerImage(
-                        currentReferenceImage, subjectDesc, concept, selectedStyle.prompt,
-                        false, [], "", 1, 1, mode === 'widget' ? "WIDGET" : "EMOTE",
-                        "", "", genConfig
-                    );
-
-                    setStickers(prev => prev.map(s => s.id === sticker.id ? { ...s, imageUrl: result.imageUrl, finalPrompt: result.prompt, status: 'completed' } : s));
-                    setQuotaUsage(prev => Math.min(prev + 2, 100));
-                    
-                    // Update reference for next iteration if Daisy Chain
-                    if (consistencyMode === 'first_result' && i === 0) {
-                        currentReferenceImage = result.imageUrl;
-                    }
-
-                } catch (err: any) {
-                    console.error("Single generation failed", err);
-                    setStickers(prev => prev.map(s => s.id === sticker.id ? { ...s, status: 'failed', error: err.message } : s));
-                }
-                processed++;
+          try {
+            let concept = sticker.emotion;
+            if (mode === 'widget') {
+              // Find full prompt for widget scenario
+              const scenario = WIDGET_SCENARIOS.find(w => w.name === sticker.emotion);
+              if (scenario) concept = scenario.prompt;
             }
+
+            const result = await generateStickerImage(
+              currentReferenceImage, subjectDesc, concept, selectedStyle.prompt,
+              false, [], "", 1, 1, mode === 'widget' ? "WIDGET" : "EMOTE",
+              "", "", genConfig
+            );
+
+            setStickers(prev => prev.map(s => s.id === sticker.id ? { ...s, imageUrl: result.imageUrl, finalPrompt: result.prompt, status: 'completed' } : s));
+            setQuotaUsage(prev => Math.min(prev + 2, 100));
+
+            // Update reference for next iteration if Daisy Chain
+            if (consistencyMode === 'first_result' && i === 0) {
+              currentReferenceImage = result.imageUrl;
+            }
+
+          } catch (err: any) {
+            console.error("Single generation failed", err);
+            setStickers(prev => prev.map(s => s.id === sticker.id ? { ...s, status: 'failed', error: err.message } : s));
+          }
+          processed++;
         }
-        setGenerationStatus(GenerationStatus.COMPLETED);
+      }
+      setGenerationStatus(GenerationStatus.COMPLETED);
 
     } catch (error: any) {
-        console.error("Generation Flow Failed", error);
-        setGenerationStatus(GenerationStatus.FAILED);
-        // Important: Mark all pending/generating stickers as failed so they don't spin forever
-        setStickers(prev => prev.map(s => 
-            (s.status === 'generating' || s.status === 'pending') 
-            ? { ...s, status: 'failed', error: error.message || 'Generation failed' } 
-            : s
-        ));
+      console.error("Generation Flow Failed", error);
+      setGenerationStatus(GenerationStatus.FAILED);
+      // Important: Mark all pending/generating stickers as failed so they don't spin forever
+      setStickers(prev => prev.map(s =>
+        (s.status === 'generating' || s.status === 'pending')
+          ? { ...s, status: 'failed', error: error.message || 'Generation failed' }
+          : s
+      ));
     }
   };
 
   const handleSceneGenerate = async (prompt: string, aspectRatio: string) => {
-      setGenerationStatus(GenerationStatus.GENERATING);
-      setCurrentSceneImage(null); // Clear previous to show loading
-      setSceneAspectRatio(aspectRatio);
-      
-      try {
-          // Pass genConfig
-          const imageUrl = await generateSceneImage(prompt, aspectRatio, genConfig);
-          setCurrentSceneImage(imageUrl);
-          
-          const newItem: SceneHistoryItem = {
-              id: Date.now().toString(),
-              prompt: prompt,
-              imageUrl: imageUrl,
-              timestamp: Date.now()
-          };
-          
-          setSceneHistory(prev => [newItem, ...prev]);
-          setGenerationStatus(GenerationStatus.IDLE);
-          setQuotaUsage(prev => Math.min(prev + 5, 100));
-      } catch (error) {
-          console.error("Scene generation failed", error);
-          setGenerationStatus(GenerationStatus.FAILED);
-      }
+    setGenerationStatus(GenerationStatus.GENERATING);
+    setCurrentSceneImage(null); // Clear previous to show loading
+    setSceneAspectRatio(aspectRatio);
+
+    try {
+      // Pass genConfig
+      const imageUrl = await generateSceneImage(prompt, aspectRatio, genConfig);
+      setCurrentSceneImage(imageUrl);
+
+      const newItem: SceneHistoryItem = {
+        id: Date.now().toString(),
+        prompt: prompt,
+        imageUrl: imageUrl,
+        timestamp: Date.now()
+      };
+
+      setSceneHistory(prev => [newItem, ...prev]);
+      setGenerationStatus(GenerationStatus.IDLE);
+      setQuotaUsage(prev => Math.min(prev + 5, 100));
+    } catch (error) {
+      console.error("Scene generation failed", error);
+      setGenerationStatus(GenerationStatus.FAILED);
+    }
   };
 
   return (
     <div className="flex flex-col md:flex-row h-screen w-full bg-[#F3F4F6] overflow-hidden">
       {/* Sidebar - Fixed width on Desktop, Full on Mobile (controlled via tab/css) */}
       <div className={`md:w-[400px] w-full flex-shrink-0 border-r border-gray-200 bg-white h-full transition-transform ${activeTab === 0 ? 'block' : 'hidden md:block'}`}>
-        <Sidebar 
+        <Sidebar
           sourceImage={sourceImage}
           masterImage={masterImage}
           onImageSelect={handleImageSelect}
           onMasterImageUpdate={setMasterImage}
           onGenerateMaster={handleGenerateMasterCharacter}
           isGeneratingMaster={generationStatus === GenerationStatus.GENERATING && !stickers.some(s => s.status === 'generating')}
-          
+
           mode={mode}
           onModeChange={handleModeChange}
-          
+
           sheetMode={sheetMode}
           onSheetModeChange={handleSheetModeChange}
-          
+
           spriteActions={spriteActions}
           onSpriteActionChange={handleSpriteActionChange}
-          
+
           gridConfig={gridConfig}
           onGridConfigChange={setGridConfig}
-          
+
           sheetPromptTemplate={sheetPromptTemplate}
           onSheetPromptTemplateChange={setSheetPromptTemplate}
 
@@ -464,10 +486,10 @@ const App: React.FC = () => {
           onConsistencyModeChange={setConsistencyMode}
 
           onSceneGenerate={handleSceneGenerate}
-          
+
           quotaUsage={quotaUsage}
           quotaLimit={quotaLimit}
-          
+
           isLocalApi={isLocalApi}
           onToggleApi={handleToggleApi}
 
@@ -478,28 +500,28 @@ const App: React.FC = () => {
 
       {/* Main Content Area (Results) */}
       <div className={`flex-1 h-full relative ${activeTab === 1 ? 'block' : 'hidden md:block'}`}>
-         {/* Mobile Tab Switcher */}
-         <div className="md:hidden flex border-b border-gray-200 bg-white">
-             <button onClick={() => setActiveTab(0)} className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest ${activeTab === 0 ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400'}`}>Configuration</button>
-             <button onClick={() => setActiveTab(1)} className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest ${activeTab === 1 ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400'}`}>Results ({completedCount})</button>
-         </div>
+        {/* Mobile Tab Switcher */}
+        <div className="md:hidden flex border-b border-gray-200 bg-white">
+          <button onClick={() => setActiveTab(0)} className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest ${activeTab === 0 ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400'}`}>Configuration</button>
+          <button onClick={() => setActiveTab(1)} className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest ${activeTab === 1 ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400'}`}>Results ({completedCount})</button>
+        </div>
 
-         {mode === 'scene' ? (
-             <SceneResults 
-                currentImage={currentSceneImage}
-                history={sceneHistory}
-                isGenerating={generationStatus === GenerationStatus.GENERATING}
-                onSelectHistory={(item) => setCurrentSceneImage(item.imageUrl)}
-                aspectRatio={sceneAspectRatio}
-             />
-         ) : (
-             <StickerGrid 
-               stickers={stickers} 
-               progress={{ current: completedCount, total: totalCount }}
-               onRegenerate={handleRegenerateSingle}
-               finalPrompt={stickers.find(s => s.id === stickers[0]?.id)?.finalPrompt} // Just showing first for now or selected
-             />
-         )}
+        {mode === 'scene' ? (
+          <SceneResults
+            currentImage={currentSceneImage}
+            history={sceneHistory}
+            isGenerating={generationStatus === GenerationStatus.GENERATING}
+            onSelectHistory={(item) => setCurrentSceneImage(item.imageUrl)}
+            aspectRatio={sceneAspectRatio}
+          />
+        ) : (
+          <StickerGrid
+            stickers={stickers}
+            progress={{ current: completedCount, total: totalCount }}
+            onRegenerate={handleRegenerateSingle}
+            finalPrompt={stickers.find(s => s.id === stickers[0]?.id)?.finalPrompt} // Just showing first for now or selected
+          />
+        )}
       </div>
     </div>
   );

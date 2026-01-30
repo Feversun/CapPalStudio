@@ -22,45 +22,45 @@ export const EMOTIONS = [
 
 // --- DUOLINGO STYLE WIDGET SCENARIOS ---
 export const WIDGET_SCENARIOS = [
-  { 
-    name: 'Streak Fire', 
-    emoji: '🔥', 
-    prompt: 'Concept: The Streak. The character is holding a magical, intense burning fire flame in their hand. Determined, motivated, powerful expression. High contrast lighting. Dynamic pose.' 
+  {
+    name: 'Streak Fire',
+    emoji: '🔥',
+    prompt: 'Concept: The Streak. The character is holding a magical, intense burning fire flame in their hand. Determined, motivated, powerful expression. High contrast lighting. Dynamic pose.'
   },
-  { 
-    name: 'Melting', 
-    emoji: '🫠', 
-    prompt: 'Concept: Giving Up / Heatwave. The character is literally melting into a puddle on the floor. Distorted, liquid-like geometry. Eyes drooping, tongue hanging out. Comical exaggerated defeat.' 
+  {
+    name: 'Melting',
+    emoji: '🫠',
+    prompt: 'Concept: Giving Up / Heatwave. The character is literally melting into a puddle on the floor. Distorted, liquid-like geometry. Eyes drooping, tongue hanging out. Comical exaggerated defeat.'
   },
-  { 
-    name: 'Aged Skeleton', 
-    emoji: '💀', 
-    prompt: 'Concept: Missed Lesson / Decay. The character has turned into a dusty, cobweb-covered version of themselves, or a cute skeleton version. Implies they have been waiting for 84 years. Funny, tragic.' 
+  {
+    name: 'Aged Skeleton',
+    emoji: '💀',
+    prompt: 'Concept: Missed Lesson / Decay. The character has turned into a dusty, cobweb-covered version of themselves, or a cute skeleton version. Implies they have been waiting for 84 years. Funny, tragic.'
   },
-  { 
-    name: 'Begging', 
-    emoji: '🥺', 
-    prompt: 'Concept: Please Come Back. Extreme close-up of the face. Giant, watery, shimmering anime tearful eyes looking up at the camera. Paws/hands clasped together in prayer. Maximum guilt trip.' 
+  {
+    name: 'Begging',
+    emoji: '🥺',
+    prompt: 'Concept: Please Come Back. Extreme close-up of the face. Giant, watery, shimmering anime tearful eyes looking up at the camera. Paws/hands clasped together in prayer. Maximum guilt trip.'
   },
-  { 
-    name: 'Nuclear Rage', 
-    emoji: '🌋', 
-    prompt: 'Concept: You Broke The Streak. Character is standing in front of a nuclear mushroom cloud or massive fire background. Eyes glowing red. Extreme anger, chaotic energy. Shadowy and menacing but cute.' 
+  {
+    name: 'Nuclear Rage',
+    emoji: '🌋',
+    prompt: 'Concept: You Broke The Streak. Character is standing in front of a nuclear mushroom cloud or massive fire background. Eyes glowing red. Extreme anger, chaotic energy. Shadowy and menacing but cute.'
   },
-  { 
-    name: 'Love Bomb', 
-    emoji: '😍', 
-    prompt: 'Concept: Appreciation. Character is pressed up against the screen "glass", kissing it. Squished face effect. Surrounded by floating 3D hearts. Overwhelming love and affection.' 
+  {
+    name: 'Love Bomb',
+    emoji: '😍',
+    prompt: 'Concept: Appreciation. Character is pressed up against the screen "glass", kissing it. Squished face effect. Surrounded by floating 3D hearts. Overwhelming love and affection.'
   },
-  { 
-    name: 'Coffee Deprived', 
-    emoji: '☕', 
-    prompt: 'Concept: Morning Grind. Character looks exhausted, messy fur/hair, bloodshot eyes, shaking visibly, holding a giant coffee mug that says "No Talk". Chaotic morning energy.' 
+  {
+    name: 'Coffee Deprived',
+    emoji: '☕',
+    prompt: 'Concept: Morning Grind. Character looks exhausted, messy fur/hair, bloodshot eyes, shaking visibly, holding a giant coffee mug that says "No Talk". Chaotic morning energy.'
   },
-  { 
-    name: 'Fine (This is Fine)', 
-    emoji: '🙃', 
-    prompt: 'Concept: "This is Fine" meme reference. The character is sitting calmly at a table with a cup of tea, while the entire room around them is engulfed in flames. Smiling blankly.' 
+  {
+    name: 'Fine (This is Fine)',
+    emoji: '🙃',
+    prompt: 'Concept: "This is Fine" meme reference. The character is sitting calmly at a table with a cup of tea, while the entire room around them is engulfed in flames. Smiling blankly.'
   }
 ];
 
@@ -97,67 +97,60 @@ export const GET_MOTION_DESCRIPTION = (mode: string): string => {
 // --- MODULE 1: PASSIVE IDLE ---
 
 export const IDLE_DEFAULTS: SheetActionItem[] = [
-  { 
-    label: "Idle_LookAround", 
-    description: "A seamless looping idle animation of a character looking around.",
-    enabled: true,
-    sequencePrompt: `Start: Neutral center pose.
-Middle: Head turns left, then right.
-End: Return to neutral center pose (Loop).`
-  },
-  { label: "Idle_Neutral", description: "Breathing cycle. Chest slightly rising and falling. Minimal movement.", enabled: true },
-  { label: "Idle_Thinking", description: "Hand on chin. Subtle body sway. Looking upwards.", enabled: true },
-  { label: "Idle_Sleepy", description: "Head nodding down due to gravity, snapping back up.", enabled: true },
-  { label: "Idle_Shy", description: "Body shrinks inward. Hands fidgeting. Feet pigeon-toed.", enabled: true }
+  { label: "Idle_LookAround", description: "", enabled: true },
+  { label: "Idle_Neutral", description: "", enabled: true },
+  { label: "Idle_Thinking", description: "", enabled: true },
+  { label: "Idle_Sleepy", description: "", enabled: true },
+  { label: "Idle_Shy", description: "", enabled: true }
 ];
 
 // --- MODULE 2: EMOTE (LOUD IDLE) ---
 
 export const EMOTE_DEFAULTS: SheetActionItem[] = [
-  { label: "Emote_Laugh", description: "Holding stomach. Body rocking back and forth. Head thrown back.", enabled: true },
-  { label: "Emote_Angry", description: "Stomping feet. Fists clenched. Steam effect implied. Vibration.", enabled: true },
-  { label: "Emote_Shock", description: "Sudden vertical jump (squash and stretch). Eyes wide open.", enabled: true },
-  { label: "Emote_Joy", description: "Jumping jack motion. Hands forming 'Y' shape. Cheerful.", enabled: true },
-  { label: "Emote_Wave", description: "Arm raised high. Hand waving left/right strictly.", enabled: true }
+  { label: "Emote_Laugh", description: "", enabled: true },
+  { label: "Emote_Angry", description: "", enabled: true },
+  { label: "Emote_Shock", description: "", enabled: true },
+  { label: "Emote_Joy", description: "", enabled: true },
+  { label: "Emote_Wave", description: "", enabled: true }
 ];
 
 // --- MODULE 3: ACTION (LOCOMOTION) ---
 
 export const ACTION_DEFAULTS: SheetActionItem[] = [
-  { label: "Loco_Walk", description: "Standard walk cycle. Arms swinging opposite to legs. Bobbing.", enabled: true },
-  { label: "Loco_Run", description: "High speed run. Forward lean 45deg. Legs blurring. Airborne frames.", enabled: true },
-  { label: "Loco_Jump", description: "Anticipation (Squash) -> Jump (Stretch) -> Apex (Tuck) -> Land (Squash).", enabled: true },
-  { label: "Loco_Dash", description: "Dash pose. Speed lines implied. Extreme forward lean.", enabled: true },
-  { label: "Loco_Crouch", description: "Low profile sneak. Slow deliberate steps.", enabled: true }
+  { label: "Loco_Walk", description: "", enabled: true },
+  { label: "Loco_Run", description: "", enabled: true },
+  { label: "Loco_Jump", description: "", enabled: true },
+  { label: "Loco_Dash", description: "", enabled: true },
+  { label: "Loco_Crouch", description: "", enabled: true }
 ];
 
 // --- MODULE 4: UI STATES (ONBOARDING & CONVERSION) ---
 
 export const UI_UX_DEFAULTS: SheetActionItem[] = [
-  { 
-    label: "UI_Notif_Bell", 
-    description: "For Notification Access. Character hugging a large Golden Bell. Eyes wide and pleading (puppy eyes). Cute and begging.", 
-    enabled: true 
+  {
+    label: "UI_Notif_Bell",
+    description: "For Notification Access. Character hugging a large Golden Bell. Eyes wide and pleading (puppy eyes). Cute and begging.",
+    enabled: true
   },
-  { 
-    label: "UI_Offer_Gift", 
-    description: "For Special Offers. Character holding a wrapped Gift Box forward. Shyly smiling, presenting the gift to the user.", 
-    enabled: true 
+  {
+    label: "UI_Offer_Gift",
+    description: "For Special Offers. Character holding a wrapped Gift Box forward. Shyly smiling, presenting the gift to the user.",
+    enabled: true
   },
-  { 
-    label: "UI_Sub_Heart", 
-    description: "For Premium/Paywall. Character holding a large Red Heart cushion. Rubbing cheek against it. Cozy, companionship vibe.", 
-    enabled: true 
+  {
+    label: "UI_Sub_Heart",
+    description: "For Premium/Paywall. Character holding a large Red Heart cushion. Rubbing cheek against it. Cozy, companionship vibe.",
+    enabled: true
   },
-  { 
-    label: "UI_Rate_Star", 
-    description: "For App Rating. Character holding a glowing Yellow Star high up above head. Proud and happy expression.", 
-    enabled: true 
+  {
+    label: "UI_Rate_Star",
+    description: "For App Rating. Character holding a glowing Yellow Star high up above head. Proud and happy expression.",
+    enabled: true
   },
-  { 
-    label: "UI_Please_Beg", 
-    description: "For Soft Block/Permissions. Hands clasped together in prayer/begging motion. Looking up at camera. Maximum sympathy.", 
-    enabled: true 
+  {
+    label: "UI_Please_Beg",
+    description: "For Soft Block/Permissions. Hands clasped together in prayer/begging motion. Looking up at camera. Maximum sympathy.",
+    enabled: true
   }
 ];
 
@@ -237,9 +230,14 @@ export const PRESET_IMAGES = [
 
 export const STYLES: StickerStyle[] = [
   {
-    id: 'acnh',
-    name: 'Animal Crossing',
-    prompt: 'A high-quality 3D render in the style of Animal Crossing: New Horizons. The character should look like a villager from the game. Materials: Smooth matte finish for skin/plastic/wood parts; Soft fuzzy/flocked texture ONLY for clothing or plush elements. Rounded smooth geometry, cute chibi proportions. Bright, cheerful, soft natural lighting. Vibrant colors. Isolated on a pure white background with a thick white die-cut border.',
+    id: 'acnh_villager',
+    name: 'AC Villager',
+    prompt: 'A high-quality 3D render in the style of Animal Crossing: New Horizons. The character should look like a villager from the game. Bipedal anthropomorphic form, standing upright on two legs. Materials: Smooth matte finish for skin/plastic/wood parts; Soft fuzzy/flocked texture ONLY for clothing or plush elements. Rounded smooth geometry, cute chibi proportions. Bright, cheerful, soft natural lighting. Vibrant colors. Isolated on a pure white background with a thick white die-cut border.',
+  },
+  {
+    id: 'acnh_natural',
+    name: 'AC Natural',
+    prompt: 'A high-quality 3D render with soft, rounded geometry and cute chibi proportions. IMPORTANT: Preserve the subject\'s natural anatomical form - if the subject is a quadrupedal animal (dog, cat, etc.), render it on four legs; if bipedal, render it standing. Do NOT anthropomorphize or force bipedal stance on naturally quadrupedal creatures. Materials: Smooth matte finish for skin/plastic/wood parts; Soft fuzzy/flocked texture for fur or plush elements. Bright, cheerful, soft natural lighting. Vibrant pastel colors. Rounded friendly silhouettes. Isolated on a pure white background with a thick white die-cut border.',
   },
   {
     id: 'default',
@@ -273,7 +271,7 @@ export const STYLES: StickerStyle[] = [
   },
 ];
 
-export const DEFAULT_STYLE_ID = 'acnh';
+export const DEFAULT_STYLE_ID = 'acnh_villager';
 
 // --- Scene Generator Constants ---
 
@@ -424,8 +422,8 @@ export const DEFAULT_WORLD_CITIES = [
 ];
 
 export const ICON_THEMES = [
-    { id: 'rv_travel', name: 'RV Travel' },
-    { id: 'camping', name: 'Outdoor Camping' }
+  { id: 'rv_travel', name: 'RV Travel' },
+  { id: 'camping', name: 'Outdoor Camping' }
 ];
 
 export const ICONS_RV_TRAVEL = [
