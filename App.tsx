@@ -23,6 +23,7 @@ const App: React.FC = () => {
   const [consistencyMode, setConsistencyMode] = useState<ConsistencyMode>('reference');
 
   const [gridConfig, setGridConfig] = useState<SheetGridConfig>({ rows: 4, cols: 4 });
+  const [megaSheetMode, setMegaSheetMode] = useState<boolean>(false); // false = multi-sheet, true = mega-sheet (8×N)
   const [spriteActions, setSpriteActions] = useState<SheetActionItem[]>(ACTION_DEFAULTS);
   const [sheetPromptTemplate, setSheetPromptTemplate] = useState<string>(MASTER_SHEET_PROMPT_TEMPLATE);
 
@@ -320,14 +321,27 @@ const App: React.FC = () => {
     // 1. Setup Stubs
     let newStickers: Sticker[] = [];
     if (mode === 'sheet') {
-      // Create one stub per enabled action (each will generate its own sprite sheet)
       const activeActions = spriteActions.filter(a => a.enabled !== false);
-      newStickers = activeActions.map((action, idx) => ({
-        id: `${Date.now()}-${idx}`,
-        emotion: action.label,
-        emoji: '📜',
-        status: 'pending'
-      }));
+      // Limit to max 7 actions for Mega Sheet mode
+      const limitedActions = megaSheetMode ? activeActions.slice(0, 7) : activeActions;
+
+      if (megaSheetMode) {
+        // MEGA SHEET: Single stub for combined 8×N sheet
+        newStickers = [{
+          id: Date.now().toString(),
+          emotion: `MEGA ${sheetMode.toUpperCase()} (${limitedActions.length} animations × 8 frames)`,
+          emoji: '🎬',
+          status: 'pending'
+        }];
+      } else {
+        // MULTI-SHEET: One stub per action
+        newStickers = limitedActions.map((action, idx) => ({
+          id: `${Date.now()}-${idx}`,
+          emotion: action.label,
+          emoji: '📜',
+          status: 'pending'
+        }));
+      }
     } else if (mode === 'widget') {
       newStickers = WIDGET_SCENARIOS.map((scenario, idx) => ({
         id: `${Date.now()}-${idx}`,
@@ -354,43 +368,64 @@ const App: React.FC = () => {
 
       // 2. Process
       if (mode === 'sheet') {
-        // NEW LOGIC: Each action item generates its OWN sprite sheet (Option B)
         const activeActions = spriteActions.filter(a => a.enabled !== false);
-        const itemsToProcess = [...newStickers];
-        let currentReferenceImage = masterImage || sourceImage;
+        const limitedActions = megaSheetMode ? activeActions.slice(0, 7) : activeActions;
 
-        for (let i = 0; i < itemsToProcess.length; i++) {
-          const sticker = itemsToProcess[i];
-          const action = activeActions[i];
+        if (megaSheetMode) {
+          // MEGA SHEET MODE: All actions in one 8×N image
+          setStickers(prev => prev.map(s => ({ ...s, status: 'generating' })));
 
-          if (!action) continue; // Safety check
+          const megaRows = limitedActions.length; // 1 row per action, max 7
+          const megaCols = 8; // 8 frames per animation
 
-          setStickers(prev => prev.map(s => s.id === sticker.id ? { ...s, status: 'generating' } : s));
+          const result = await generateStickerImage(
+            masterImage || sourceImage, subjectDesc, "Mega Sprite Sheet", selectedStyle.prompt,
+            true, limitedActions, sheetPromptTemplate, megaRows, megaCols, sheetMode,
+            SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT, genConfig
+          );
 
-          try {
-            // Generate a single sprite sheet for THIS action only
-            const result = await generateStickerImage(
-              currentReferenceImage, subjectDesc, action.label, selectedStyle.prompt,
-              true, [action], sheetPromptTemplate, gridConfig.rows, gridConfig.cols, sheetMode,
-              SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT, genConfig
-            );
+          setStickers(prev => prev.map(s => ({
+            ...s, imageUrl: result.imageUrl, finalPrompt: result.prompt, status: 'completed'
+          })));
+          setQuotaUsage(prev => Math.min(prev + 5, 100));
+        } else {
+          // MULTI-SHEET MODE: Each action generates its own sprite sheet
+          const itemsToProcess = [...newStickers];
+          let currentReferenceImage = masterImage || sourceImage;
 
-            setStickers(prev => prev.map(s => s.id === sticker.id
-              ? { ...s, imageUrl: result.imageUrl, finalPrompt: result.prompt, status: 'completed' }
-              : s
-            ));
-            setQuotaUsage(prev => Math.min(prev + 3, 100));
+          for (let i = 0; i < itemsToProcess.length; i++) {
+            const sticker = itemsToProcess[i];
+            const action = limitedActions[i];
 
-            // Use first result as reference for subsequent generations (consistency mode)
-            if (consistencyMode === 'first_result' && i === 0) {
-              currentReferenceImage = result.imageUrl;
+            if (!action) continue; // Safety check
+
+            setStickers(prev => prev.map(s => s.id === sticker.id ? { ...s, status: 'generating' } : s));
+
+            try {
+              // Generate a single sprite sheet for THIS action only
+              const result = await generateStickerImage(
+                currentReferenceImage, subjectDesc, action.label, selectedStyle.prompt,
+                true, [action], sheetPromptTemplate, gridConfig.rows, gridConfig.cols, sheetMode,
+                SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT, genConfig
+              );
+
+              setStickers(prev => prev.map(s => s.id === sticker.id
+                ? { ...s, imageUrl: result.imageUrl, finalPrompt: result.prompt, status: 'completed' }
+                : s
+              ));
+              setQuotaUsage(prev => Math.min(prev + 3, 100));
+
+              // Use first result as reference for subsequent generations (consistency mode)
+              if (consistencyMode === 'first_result' && i === 0) {
+                currentReferenceImage = result.imageUrl;
+              }
+            } catch (err: any) {
+              console.error(`Sheet generation failed for ${action.label}`, err);
+              setStickers(prev => prev.map(s => s.id === sticker.id
+                ? { ...s, status: 'failed', error: err.message }
+                : s
+              ));
             }
-          } catch (err: any) {
-            console.error(`Sheet generation failed for ${action.label}`, err);
-            setStickers(prev => prev.map(s => s.id === sticker.id
-              ? { ...s, status: 'failed', error: err.message }
-              : s
-            ));
           }
         }
       } else {
@@ -497,6 +532,9 @@ const App: React.FC = () => {
 
           gridConfig={gridConfig}
           onGridConfigChange={setGridConfig}
+
+          megaSheetMode={megaSheetMode}
+          onMegaSheetModeChange={setMegaSheetMode}
 
           sheetPromptTemplate={sheetPromptTemplate}
           onSheetPromptTemplateChange={setSheetPromptTemplate}
