@@ -553,6 +553,7 @@ Location: {{location}}.
 Key Elements: {{elements}}.`;
 
 export const ACNH_SCENE_STYLE_TEMPLATE = `Visual Style & Atmosphere:
+**IMPORTANT: Mimic ACNH's visual TEXTURE and QUALITY only — NOT specific element designs (e.g., do not copy ACNH's exact plant shapes). Reference the rendering quality, not the art assets.**
 - A fully realized world environment, NOT a miniature diorama or a toy set on a table.
 - The scene should extend to the edges of the frame (full bleed).
 - {{lighting}}
@@ -578,6 +579,7 @@ export const ACNH_SCENE_BARREN_STYLE_TEMPLATE = `**LAYOUT REQUIREMENT: OPEN EMPT
 - Focus on the ground texture (grass, sand, paving) and the horizon/sky.
 
 Visual Style & Atmosphere:
+**IMPORTANT: Mimic ACNH's visual TEXTURE and QUALITY only — NOT specific element designs. Reference the rendering quality, not the art assets.**
 - A fully realized world environment.
 - The scene should extend to the edges of the frame (full bleed).
 - {{lighting}}
