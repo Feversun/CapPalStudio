@@ -55,7 +55,7 @@ const App: React.FC = () => {
     topP: 0.95,
     topK: 64,
     seed: undefined,
-    imageSize: '1K', // Default to 1K for safety
+    imageSize: '4K', // Default to 4K for production quality
     model: 'gemini-3-pro-image-preview' // Use Gemini 3 Pro for best quality
   });
 
