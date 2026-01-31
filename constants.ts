@@ -347,7 +347,22 @@ export const UNIFIED_ELEMENT_THEMES = [
   {
     id: 'tennis',
     name: 'Tennis Club',
-    prompt: 'Style: Preppy athletic elegance with clean lines and sporty sophistication.'
+    prompt: 'Style: Country club tennis court vibes — crisp whites, grass green accents, and sporty elegance.'
+  },
+  {
+    id: 'preppy_academy',
+    name: 'Preppy Academy',
+    prompt: 'Style: Ivy league campus aesthetic — warm wood, leather details, tartan patterns, and scholarly charm.'
+  },
+  {
+    id: 'natural_linen',
+    name: 'Natural Linen',
+    prompt: 'Style: Organic, breathable linen textures with muted earth tones and handcrafted warmth.'
+  },
+  {
+    id: 'coastal_summer',
+    name: 'Coastal Summer',
+    prompt: 'Style: Beachy, sun-bleached vibes with ocean blues, sand tones, and relaxed nautical charm.'
   }
 ];
 
@@ -582,13 +597,14 @@ The set includes the following items, designed in a {{location}} theme suitable 
 {{elements}}`;
 
 export const ACNH_FURNITURE_STYLE_TEMPLATE = `**[Visual Style Definition]**
-Style is 3D game asset render.
+Style is 3D game asset render inspired by Animal Crossing: New Horizons.
 
 * **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Objects have visible thickness and volume despite the frontal view.
-* **Lighting:** Soft, high-quality studio lighting. Gentle self-shadowing (ambient occlusion) to show that the objects are 3D, but no harsh cast shadows on the white background.
+* **Texture:** Natural material feel — painted wood, soft fabric, matte ceramic. Avoid plastic or glossy surfaces.
+* **Lighting:** Soft, warm environmental lighting with gentle ambient occlusion. Subtle color bounce as if lit by a sunny window. No harsh studio lighting.
 * **Perspective:** **Strict front-facing view (dead-on elevation) for all items.** Objects are rendered straight-on, not iso/3D angle.
 
-**Negative Prompt:** characters, people, animals, villagers, touching edges, overlapping, flat 2D vector, lineless art, harsh outlines, realistic high-detail texture, noise, complex background, perspective distortion, isometric view, cast shadow, drop shadow, contact shadow.`;
+**Negative Prompt:** characters, people, animals, villagers, touching edges, overlapping, flat 2D vector, lineless art, harsh outlines, realistic high-detail texture, noise, complex background, perspective distortion, isometric view, cast shadow, drop shadow, contact shadow, plastic, glossy, shiny.`;
 
 // 4. Outdoor
 export const ACNH_OUTDOOR_CONTENT_TEMPLATE = `**[Asset Definition & Layout]**
@@ -625,14 +641,14 @@ export const ACNH_VEHICLE_STYLE_TEMPLATE = `**[Visual Style Definition]**
 Style is 3D game asset render, mimicking the distinct aesthetics of *Animal Crossing: New Horizons*.
 **CRITICAL: Use a strict SIDE VIEW (Profile / Elevation) for all vehicles.**
 
-* **Visual Signature:** Soft rounded geometry, cozy textures, and vibrant pastel colors.
+* **Visual Signature:** Soft rounded geometry, natural material textures, and warm inviting colors.
 * **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Objects have visible thickness and volume despite the side view.
-* **Texture:** **Toy-like Smoothness.** Vehicles should look like die-cast toys or high-quality plastic/wood. **Do NOT make the cars look like they are made of fur or felt.** Keep them smooth and matte.
-* **Color:** Vibrant pastel color palette, cheerful, inviting, and warm tones.
-* **Lighting:** Soft, high-quality studio lighting. Gentle self-shadowing (ambient occlusion) to show that the objects are 3D, but no harsh cast shadows on the white background.
+* **Texture:** **Painted Wood or Matte Finish.** Vehicles should look like hand-painted wooden toys or matte-finish models. Natural, warm material feel.
+* **Color:** Warm, inviting color palette inspired by nature — sky blues, grass greens, sunset oranges, soft creams.
+* **Lighting:** Soft environmental lighting with warm ambient glow, like a sunny afternoon. Gentle self-shadowing (ambient occlusion) but no harsh cast shadows.
 * **Perspective:** **Strict 90-degree Side View (Profile).** Objects are rendered straight-on, not iso/3D angle.
 
-**Negative Prompt:** isometric, front view, 3/4 view, perspective distortion, realistic car proportions, gritty, dirty, rusty, human characters, animals driving, background scenery, complex background, furry cars, flocked cars.`;
+**Negative Prompt:** isometric, front view, 3/4 view, perspective distortion, realistic car proportions, gritty, dirty, rusty, human characters, animals driving, background scenery, complex background, furry cars, flocked cars, plastic, shiny, glossy.`;
 
 // 6. Miniature Diorama
 export const MINIATURE_DIORAMA_CONTENT_TEMPLATE = `**[Asset Definition & Layout]**
@@ -645,13 +661,14 @@ Generate exactly {{count}} distinct **"Artistic Souvenir Globes"** or "Spherical
 {{city_list}}`;
 
 export const MINIATURE_DIORAMA_STYLE_TEMPLATE = `**[Visual Style Definition]**
-Style is 3D game asset render.
+Style is 3D game asset render inspired by Animal Crossing: New Horizons.
 * **Composition:** **SPHERICAL / ROUNDED / ORGANIC.** NOT ISOMETRIC SQUARES.
 * **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges.
-* **Lighting:** Soft, high-quality studio lighting. Gentle self-shadowing (ambient occlusion) to show that the objects are 3D, but no harsh cast shadows on the white background.
+* **Texture:** Natural material feel — painted wood, soft fabric, natural foliage. Avoid plastic or glossy surfaces.
+* **Lighting:** Soft, warm environmental lighting. Subtle ambient glow as if lit by golden hour sunlight. No harsh studio lighting.
 * **Perspective:** **Frontal or Slightly High Angle.** Focus on the artistic arrangement.
 
-**Negative Prompt:** isometric, square base, grid, map tile, technical drawing, sharp edges, cold lighting, realistic, low poly, glass reflection blocking view, text, labels, cast shadow, drop shadow.`;
+**Negative Prompt:** isometric, square base, grid, map tile, technical drawing, sharp edges, cold lighting, realistic, low poly, glass reflection blocking view, text, labels, cast shadow, drop shadow, plastic, shiny, glossy.`;
 
 // 7. Miniature Encyclopedia
 export const MINIATURE_ENCYCLOPEDIA_CONTENT_TEMPLATE = `**[Asset Definition & Layout]**
@@ -664,13 +681,14 @@ Generate exactly these {{count}} items:
 {{item_list}}`;
 
 export const MINIATURE_ENCYCLOPEDIA_STYLE_TEMPLATE = `**[Visual Style Definition]**
-Style is 3D game asset render.
-* **Concept:** Cute, chunky, soft furniture or cultural artifacts.
-* **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Objects have visible thickness and volume despite the frontal view.
-* **Lighting:** Soft, high-quality studio lighting. Gentle self-shadowing (ambient occlusion) to show that the objects are 3D, but no harsh cast shadows on the white background.
+Style is 3D game asset render inspired by Animal Crossing: New Horizons.
+* **Concept:** Cute, chunky, soft cultural artifacts and local treasures.
+* **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Objects have visible thickness and volume.
+* **Texture:** Natural material feel — painted wood, ceramic, woven fabric. Warm, handcrafted appearance. Avoid plastic or glossy surfaces.
+* **Lighting:** Soft, warm environmental lighting with gentle ambient occlusion. Subtle color bounce as if lit by a cozy window. No harsh studio lighting.
 * **Perspective:** **Strict front-facing view (dead-on elevation) for all items.** Objects are rendered straight-on, not iso/3D angle.
 
-**Negative Prompt:** characters, people, animals, villagers, touching edges, overlapping, flat 2D vector, lineless art, harsh outlines, text, labels, watermark, realistic food, photorealistic, sharp edges, isometric, cast shadow, drop shadow, contact shadow.`;
+**Negative Prompt:** characters, people, animals, villagers, touching edges, overlapping, flat 2D vector, lineless art, harsh outlines, text, labels, watermark, realistic food, photorealistic, sharp edges, isometric, cast shadow, drop shadow, contact shadow, plastic, shiny, glossy.`;
 
 // 8. Miniature Icon
 export const MINIATURE_ICON_CONTENT_TEMPLATE = `**[Asset Definition & Layout]**
