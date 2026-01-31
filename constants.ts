@@ -291,6 +291,82 @@ export const SCENE_LOCATIONS = [
   { id: 'bamboo', name: 'Bamboo Zen Garden', prompt: 'a zen garden with bamboo forest' },
 ];
 
+// --- INDOOR 7-SLOT DEFINITIONS ---
+// Structured layout system for indoor room generation
+
+export interface IndoorSlot {
+  id: string;
+  name: string;
+  nameZh: string;
+  position: string;
+  definition: string;
+  options: string[];
+}
+
+export const INDOOR_SLOT_DEFINITIONS: IndoorSlot[] = [
+  {
+    id: 'REST_UNIT',
+    name: 'Rest Unit',
+    nameZh: '休息位',
+    position: 'Left ground area',
+    definition: 'Largest seating/sleeping container. Visual anchor of the room.',
+    options: ['Single bed', 'Sofa bed', 'Bean bag chair', 'Hammock', 'Floor mattress (tatami)']
+  },
+  {
+    id: 'WORK_UNIT',
+    name: 'Work Unit',
+    nameZh: '功能台面位',
+    position: 'Right ground area',
+    definition: 'Horizontal work surface for core activities (cooking/working/crafting).',
+    options: ['Kitchen counter', 'Study desk', 'Craft workbench', 'Coffee bar', 'TV cabinet']
+  },
+  {
+    id: 'FLOOR_PROP',
+    name: 'Floor Prop',
+    nameZh: '地面补白位',
+    position: 'Center ground (between REST_UNIT and WORK_UNIT)',
+    definition: 'Small/medium standalone objects filling the gap between main furniture.',
+    options: ['Ukulele/Guitar', 'Potted plant', 'Stack of books', 'Shopping bag', 'Pet food bowl']
+  },
+  {
+    id: 'RUG_BASE',
+    name: 'Rug Base',
+    nameZh: '地面铺设位',
+    position: 'Ground layer (lowest Z-index)',
+    definition: 'Flat texture layer defining the living area boundary.',
+    options: ['Round rug', 'Woven square mat', 'Novelty shape rug (e.g., egg-shaped)', 'Picnic blanket']
+  },
+  {
+    id: 'WALL_MOUNT',
+    name: 'Wall Mount',
+    nameZh: '墙面挂载位',
+    position: 'Left wall (above REST_UNIT)',
+    definition: 'Vertical decorative wall-mounted component.',
+    options: ['Wall shelf with items', 'Poster collage', 'Wall clock', 'Wall lamp', 'Mounted skateboard']
+  },
+  {
+    id: 'VIEWPORT',
+    name: 'Viewport',
+    nameZh: '窗景位',
+    position: 'Right wall (above WORK_UNIT)',
+    definition: 'Transparent interface showing outdoor background through the window.',
+    options: ['Arched window', 'Panorama strip window', 'Circular porthole', 'Curtained square window']
+  },
+  {
+    id: 'CEILING_MOUNT',
+    name: 'Ceiling Mount',
+    nameZh: '顶部悬挂位',
+    position: 'Center ceiling',
+    definition: 'Hanging object suspended from above.',
+    options: ['Pendant lamp', 'Paper lantern', 'Wind chime', 'Disco ball', 'Hanging plant']
+  }
+];
+
+// Helper: Get slot by ID
+export const getIndoorSlot = (id: string): IndoorSlot | undefined =>
+  INDOOR_SLOT_DEFINITIONS.find(slot => slot.id === id);
+
+// Legacy alias for backward compatibility (use OUTDOOR_ELEMENTS from Asset Library section)
 export const SCENE_ELEMENTS = [
   { id: 'apple_trees', name: 'Apple Trees' },
   { id: 'cherry_blossoms', name: 'Cherry Blossom Trees' },
