@@ -332,22 +332,22 @@ export const UNIFIED_ELEMENT_THEMES = [
   {
     id: 'soft_bakery',
     name: 'Soft Bakery',
-    prompt: 'Theme: "Soft Bakery". Design Philosophy: Infuse the object with the *warmth and softness* of fresh bread without literally turning it into food. Use rounded, "loaf-like" silhouettes, matte textures that feel like high-quality soft plastic or painted wood, and accents that *suggest* bakery elements (e.g., a roof rack resembling a cooling grid, hubcaps shaped like biscuits, or cream-colored detailing). Colors: Toasted browns, warm creams, and pastel icing pinks.'
+    prompt: 'Style: Warm, cozy bakery atmosphere with soft rounded shapes and comforting earthy tones.'
   },
   {
     id: 'gorpcore',
     name: 'Gorpcore',
-    prompt: 'Theme: "Gorpcore" (Outdoor Tech). Design Philosophy: Rugged functionality meets modern street style. Incorporate utilitarian details like visible bungee cords, carabiner clips, durable mesh textures, and speckled "recycled plastic" surfaces. Use a matte, earth-tone palette (moss green, clay orange, slate grey) with high-contrast safety orange or neon yellow accents.'
+    prompt: 'Style: Rugged outdoor adventure gear aesthetic with functional, utilitarian vibes.'
   },
   {
     id: 'lofi_vinyl',
     name: 'Lo-Fi Vinyl',
-    prompt: 'Theme: "Lo-Fi Vinyl". Design Philosophy: Retro-futuristic 90s electronics aesthetic. Use "Atomic Purple" or "Glacier Blue" translucent plastic casings that reveal vague internal mechanics. Add geometric printed labels, cassette-tape style stripes, and chunky, tactile buttons. The finish should be semi-glossy plastic.'
+    prompt: 'Style: Nostalgic 90s retro electronics vibe with playful, chunky forms.'
   },
   {
     id: 'tennis',
-    name: 'Tennis',
-    prompt: 'Theme: "Tennis Club". Design Philosophy: Preppy, athletic luxury. Use perforated textures (like tennis grips or breathable fabric), clean matte white surfaces, and bold varsity stripes. Accents in "Tennis Ball Neon Green" and "Clay Court Rust". The object should feel aerodynamic, clean, and expensive.'
+    name: 'Tennis Club',
+    prompt: 'Style: Preppy athletic elegance with clean lines and sporty sophistication.'
   }
 ];
 
