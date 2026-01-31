@@ -16,7 +16,8 @@ import {
     MINIATURE_ENCYCLOPEDIA_CONTENT_TEMPLATE, MINIATURE_ENCYCLOPEDIA_STYLE_TEMPLATE,
     MINIATURE_ICON_CONTENT_TEMPLATE, MINIATURE_ICON_STYLE_TEMPLATE,
     ICON_THEMES, ICONS_RV_TRAVEL, ICONS_OUTDOOR_CAMPING,
-    UNIFIED_ELEMENT_THEMES
+    UNIFIED_ELEMENT_THEMES,
+    RENDER_STYLES, DEFAULT_RENDER_STYLE, RenderStyleId
 } from '../constants';
 import { PromptVersion } from '../types';
 import { generateCityEncyclopediaList } from '../services/gemini';
@@ -74,6 +75,9 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
     const [landscapeVariant, setLandscapeVariant] = useState<LandscapeVariant>('standard');
     const [selectedTimeId, setSelectedTimeId] = useState(SCENE_TIMES[1].id);
     const [selectedSeasonId, setSelectedSeasonId] = useState(SCENE_SEASONS[0].id);
+
+    // Render Style State (global)
+    const [renderStyle, setRenderStyle] = useState<RenderStyleId>(DEFAULT_RENDER_STYLE);
 
     // Miniature Specific State
     const [miniatureMode, setMiniatureMode] = useState<MiniatureSubMode>('collection');
@@ -307,11 +311,15 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
         setContentPrompt(newContentPrompt);
         setStylePrompt(newStylePrompt);
 
-        // Parent update still gets full prompt
-        const fullPrompt = `${newContentPrompt}\n\n${newStylePrompt}`;
+        // Get render style material prompt
+        const renderStyleObj = RENDER_STYLES.find(s => s.id === renderStyle);
+        const materialPrompt = renderStyleObj?.materialPrompt || '';
+
+        // Parent update gets full prompt with material style
+        const fullPrompt = `${newContentPrompt}\n\n${newStylePrompt}\n\n${materialPrompt}`;
         if (onPromptChange) onPromptChange(fullPrompt);
 
-    }, [mode, elementSubMode, selectedElementThemeId, selectedLocationId, selectedElementIds, customElement, isManuallyEdited, customLocations, landscapeVariant, selectedTimeId, selectedSeasonId, miniatureMode, encyclopediaItems, worldItems, iconItems, selectedIconThemeId, slotSelections]);
+    }, [mode, elementSubMode, selectedElementThemeId, selectedLocationId, selectedElementIds, customElement, isManuallyEdited, customLocations, landscapeVariant, selectedTimeId, selectedSeasonId, miniatureMode, encyclopediaItems, worldItems, iconItems, selectedIconThemeId, slotSelections, renderStyle]);
 
     const toggleElement = (id: string) => {
         if (mode === 'element' && elementSubMode === 'vehicle' && selectedElementIds.length >= 6 && !selectedElementIds.includes(id)) return;
@@ -467,6 +475,22 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
                                 {m === 'element' ? 'Elements' : (m === 'miniature' ? 'Miniature' : m)}
                             </button>
                         ))}
+                    </div>
+
+                    {/* RENDER STYLE TOGGLE - Global */}
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase">Render Style</label>
+                        <div className="flex gap-2">
+                            {RENDER_STYLES.map(style => (
+                                <button
+                                    key={style.id}
+                                    onClick={() => { setRenderStyle(style.id); setIsManuallyEdited(false); }}
+                                    className={`flex-1 py-2 px-3 rounded-lg text-[10px] font-bold transition-all border ${renderStyle === style.id ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}
+                                >
+                                    {style.emoji} {style.name}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 

@@ -326,6 +326,35 @@ export const SCENE_SEASONS = [
   { id: 'rainy', name: 'Rainy', emoji: '☔', prompt: 'Rainy Season. Wet ground reflections. Hydrangeas blooming. Overcast soft lighting. Raindrops visible. Cozy rainy mood.' },
 ];
 
+// --- RENDER STYLE OPTIONS ---
+// Two material rendering styles: Soft Flocked (default) and Soft Clay
+export type RenderStyleId = 'flocked' | 'clay';
+
+export const RENDER_STYLES: { id: RenderStyleId; name: string; emoji: string; materialPrompt: string }[] = [
+  {
+    id: 'flocked',
+    name: 'Soft Flocked',
+    emoji: '🧸',
+    materialPrompt: `**[Material Rendering — Soft Flocked/Felt]**
+* **Primary Texture:** Subtle flocked/velvet surface on appropriate areas (plush items, organic forms). Light felt-like softness.  
+* **Application:** Use sparingly and naturally — NOT everything should be fuzzy. Hard surfaces (wood, ceramic) remain matte but with warm, handcrafted feel.
+* **Subsurface Scattering:** Soft rim lighting on edges. Gentle SSS glow for warmth and depth.
+* **Finish:** Matte, never glossy. Natural material appearance.`
+  },
+  {
+    id: 'clay',
+    name: 'Soft Clay',
+    emoji: '🏺',
+    materialPrompt: `**[Material Rendering — Soft Clay/Ceramic]**
+* **Primary Texture:** Smooth matte clay/ceramic finish. Visible subtle surface imperfections.
+* **Application:** Painted wood, matte ceramic, unvarnished surfaces. Think hand-sculpted pottery or wooden toys.
+* **Ambient Occlusion:** Deep creases, grounded shadows for volumetric feel.
+* **Finish:** Matte, never glossy. Natural handcrafted warmth.`
+  }
+];
+
+export const DEFAULT_RENDER_STYLE: RenderStyleId = 'flocked';
+
 // --- UNIFIED ELEMENT THEMES ---
 // Prompts refined to preserve the object's original design/functionality while subtly integrating thematic aesthetics.
 export const UNIFIED_ELEMENT_THEMES = [
