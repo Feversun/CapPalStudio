@@ -598,6 +598,7 @@ The set includes the following items, designed in a {{location}} theme suitable 
 
 export const ACNH_FURNITURE_STYLE_TEMPLATE = `**[Visual Style Definition]**
 Style is 3D game asset render inspired by Animal Crossing: New Horizons.
+**IMPORTANT: Mimic ACNH's visual TEXTURE and QUALITY only — NOT specific element designs (e.g., do not copy ACNH's exact plant shapes or furniture designs). Reference the rendering quality, not the art assets.**
 
 * **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Objects have visible thickness and volume despite the frontal view.
 * **Texture:** Natural material feel — painted wood, soft fabric, matte ceramic. Avoid plastic or glossy surfaces.
@@ -617,7 +618,8 @@ The set includes the following outdoor elements, designed in a {{location}} them
 {{elements}}`;
 
 export const ACNH_OUTDOOR_STYLE_TEMPLATE = `**[Visual Style Definition]**
-Style is 3D game asset render.
+Style is 3D game asset render inspired by Animal Crossing: New Horizons.
+**IMPORTANT: Mimic ACNH's visual TEXTURE and QUALITY only — NOT specific element designs. Reference the rendering quality, not the art assets.**
 
 * **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Even large structures should have this "toy-like" rounded quality.
 * **Lighting:** Soft, high-quality studio lighting. Gentle self-shadowing (ambient occlusion) to show that the objects are 3D, but no harsh cast shadows on the white background.
@@ -638,7 +640,8 @@ Generate a set of vehicles based on the following types and theme:
 {{elements}}`;
 
 export const ACNH_VEHICLE_STYLE_TEMPLATE = `**[Visual Style Definition]**
-Style is 3D game asset render, mimicking the distinct aesthetics of *Animal Crossing: New Horizons*.
+Style is 3D game asset render inspired by Animal Crossing: New Horizons.
+**IMPORTANT: Mimic ACNH's visual TEXTURE and QUALITY only — NOT specific element designs. Reference the rendering quality, not the art assets.**
 **CRITICAL: Use a strict SIDE VIEW (Profile / Elevation) for all vehicles.**
 
 * **Visual Signature:** Soft rounded geometry, natural material textures, and warm inviting colors.
@@ -662,6 +665,7 @@ Generate exactly {{count}} distinct **"Artistic Souvenir Globes"** or "Spherical
 
 export const MINIATURE_DIORAMA_STYLE_TEMPLATE = `**[Visual Style Definition]**
 Style is 3D game asset render inspired by Animal Crossing: New Horizons.
+**IMPORTANT: Mimic ACNH's visual TEXTURE and QUALITY only — NOT specific element designs. Reference the rendering quality, not the art assets.**
 * **Composition:** **SPHERICAL / ROUNDED / ORGANIC.** NOT ISOMETRIC SQUARES.
 * **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges.
 * **Texture:** Natural material feel — painted wood, soft fabric, natural foliage. Avoid plastic or glossy surfaces.
@@ -682,6 +686,7 @@ Generate exactly these {{count}} items:
 
 export const MINIATURE_ENCYCLOPEDIA_STYLE_TEMPLATE = `**[Visual Style Definition]**
 Style is 3D game asset render inspired by Animal Crossing: New Horizons.
+**IMPORTANT: Mimic ACNH's visual TEXTURE and QUALITY only — NOT specific element designs. Reference the rendering quality, not the art assets.**
 * **Concept:** Cute, chunky, soft cultural artifacts and local treasures.
 * **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Objects have visible thickness and volume.
 * **Texture:** Natural material feel — painted wood, ceramic, woven fabric. Warm, handcrafted appearance. Avoid plastic or glossy surfaces.
