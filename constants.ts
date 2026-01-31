@@ -291,82 +291,6 @@ export const SCENE_LOCATIONS = [
   { id: 'bamboo', name: 'Bamboo Zen Garden', prompt: 'a zen garden with bamboo forest' },
 ];
 
-// --- INDOOR 7-SLOT DEFINITIONS ---
-// Structured layout system for indoor room generation
-
-export interface IndoorSlot {
-  id: string;
-  name: string;
-  nameZh: string;
-  position: string;
-  definition: string;
-  options: string[];
-}
-
-export const INDOOR_SLOT_DEFINITIONS: IndoorSlot[] = [
-  {
-    id: 'REST_UNIT',
-    name: 'Rest Unit',
-    nameZh: '休息位',
-    position: 'Left ground area',
-    definition: 'Largest seating/sleeping container. Visual anchor of the room.',
-    options: ['Single bed', 'Sofa bed', 'Bean bag chair', 'Hammock', 'Floor mattress (tatami)']
-  },
-  {
-    id: 'WORK_UNIT',
-    name: 'Work Unit',
-    nameZh: '功能台面位',
-    position: 'Right ground area',
-    definition: 'Horizontal work surface for core activities (cooking/working/crafting).',
-    options: ['Kitchen counter', 'Study desk', 'Craft workbench', 'Coffee bar', 'TV cabinet']
-  },
-  {
-    id: 'FLOOR_PROP',
-    name: 'Floor Prop',
-    nameZh: '地面补白位',
-    position: 'Center ground (between REST_UNIT and WORK_UNIT)',
-    definition: 'Small/medium standalone objects filling the gap between main furniture.',
-    options: ['Ukulele/Guitar', 'Potted plant', 'Stack of books', 'Shopping bag', 'Pet food bowl']
-  },
-  {
-    id: 'RUG_BASE',
-    name: 'Rug Base',
-    nameZh: '地面铺设位',
-    position: 'Ground layer (lowest Z-index)',
-    definition: 'Flat texture layer defining the living area boundary.',
-    options: ['Round rug', 'Woven square mat', 'Novelty shape rug (e.g., egg-shaped)', 'Picnic blanket']
-  },
-  {
-    id: 'WALL_MOUNT',
-    name: 'Wall Mount',
-    nameZh: '墙面挂载位',
-    position: 'Left wall (above REST_UNIT)',
-    definition: 'Vertical decorative wall-mounted component.',
-    options: ['Wall shelf with items', 'Poster collage', 'Wall clock', 'Wall lamp', 'Mounted skateboard']
-  },
-  {
-    id: 'VIEWPORT',
-    name: 'Viewport',
-    nameZh: '窗景位',
-    position: 'Right wall (above WORK_UNIT)',
-    definition: 'Transparent interface showing outdoor background through the window.',
-    options: ['Arched window', 'Panorama strip window', 'Circular porthole', 'Curtained square window']
-  },
-  {
-    id: 'CEILING_MOUNT',
-    name: 'Ceiling Mount',
-    nameZh: '顶部悬挂位',
-    position: 'Center ceiling',
-    definition: 'Hanging object suspended from above.',
-    options: ['Pendant lamp', 'Paper lantern', 'Wind chime', 'Disco ball', 'Hanging plant']
-  }
-];
-
-// Helper: Get slot by ID
-export const getIndoorSlot = (id: string): IndoorSlot | undefined =>
-  INDOOR_SLOT_DEFINITIONS.find(slot => slot.id === id);
-
-// Legacy alias for backward compatibility (use OUTDOOR_ELEMENTS from Asset Library section)
 export const SCENE_ELEMENTS = [
   { id: 'apple_trees', name: 'Apple Trees' },
   { id: 'cherry_blossoms', name: 'Cherry Blossom Trees' },
@@ -427,18 +351,89 @@ export const UNIFIED_ELEMENT_THEMES = [
   }
 ];
 
-export const FURNITURE_PIECES = [
-  { id: 'bed', name: 'Bed' },
-  { id: 'sofa', name: 'Sofa' },
-  { id: 'table', name: 'Table' },
-  { id: 'chair', name: 'Chair' },
-  { id: 'lamp', name: 'Floor Lamp' },
-  { id: 'wardrobe', name: 'Wardrobe/Closet' },
-  { id: 'shelf', name: 'Shelf' },
-  { id: 'rug', name: 'Rug' },
-  { id: 'plant', name: 'House Plant' },
-  { id: 'kitchen', name: 'Kitchen Counter' },
-  { id: 'desk', name: 'Desk' },
+export const INTERIOR_SLOTS = [
+  {
+    id: 'rest',
+    name: 'Rest Area',
+    icon: '🛏️',
+    options: [
+      { id: 'single_bed', name: 'Single Bed' },
+      { id: 'sofa_bed', name: 'Sofa Bed' },
+      { id: 'beanbag', name: 'Bean Bag Chair' },
+      { id: 'hammock', name: 'Indoor Hammock' },
+      { id: 'tatami', name: 'Tatami Floor Bed' }
+    ]
+  },
+  {
+    id: 'workstation',
+    name: 'Workstation',
+    icon: '🍳',
+    options: [
+      { id: 'kitchen_counter', name: 'Kitchen Counter with Sink' },
+      { id: 'study_desk', name: 'Study Desk' },
+      { id: 'craft_table', name: 'Craft Workbench' },
+      { id: 'coffee_bar', name: 'Coffee Bar' },
+      { id: 'tv_stand', name: 'TV Stand' }
+    ]
+  },
+  {
+    id: 'floor_decor',
+    name: 'Floor Decor',
+    icon: '🎸',
+    options: [
+      { id: 'ukulele', name: 'Ukulele / Guitar' },
+      { id: 'floor_plant', name: 'Floor Plant Pot' },
+      { id: 'book_stack', name: 'Stack of Books' },
+      { id: 'shopping_bag', name: 'Shopping Bag' },
+      { id: 'pet_bowl', name: 'Pet Food Bowl' }
+    ]
+  },
+  {
+    id: 'floor_cover',
+    name: 'Floor Cover',
+    icon: '🟤',
+    options: [
+      { id: 'round_rug', name: 'Round Rug' },
+      { id: 'square_rug', name: 'Square Woven Rug' },
+      { id: 'fun_mat', name: 'Fun Shape Mat' },
+      { id: 'picnic_blanket', name: 'Picnic Blanket' }
+    ]
+  },
+  {
+    id: 'wall_decor',
+    name: 'Wall Decor',
+    icon: '🖼️',
+    options: [
+      { id: 'wall_shelf', name: 'Wall Shelf with Small Items' },
+      { id: 'poster_wall', name: 'Poster Collage' },
+      { id: 'wall_clock', name: 'Wall Clock' },
+      { id: 'wall_lamp', name: 'Wall Sconce Lamp' },
+      { id: 'skateboard', name: 'Mounted Skateboard' }
+    ]
+  },
+  {
+    id: 'window',
+    name: 'Window View',
+    icon: '🪟',
+    options: [
+      { id: 'arch_window', name: 'Arched Window' },
+      { id: 'panoramic', name: 'Panoramic Window' },
+      { id: 'porthole', name: 'Round Porthole' },
+      { id: 'curtain_window', name: 'Curtained Window' }
+    ]
+  },
+  {
+    id: 'ceiling',
+    name: 'Ceiling Light',
+    icon: '💡',
+    options: [
+      { id: 'pendant_lamp', name: 'Pendant Lamp' },
+      { id: 'paper_lantern', name: 'Paper Lantern' },
+      { id: 'wind_chime', name: 'Wind Chime' },
+      { id: 'disco_ball', name: 'Disco Ball' },
+      { id: 'hanging_plant', name: 'Hanging Plant' }
+    ]
+  }
 ];
 
 export const OUTDOOR_ELEMENTS = [
