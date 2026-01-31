@@ -27,6 +27,7 @@ export interface SceneHistoryItem {
   prompt: string;
   imageUrl: string;
   timestamp: number;
+  imageSize?: '1K' | '2K' | '4K';
 }
 
 export interface GenerationConfig {

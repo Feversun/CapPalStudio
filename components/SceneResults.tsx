@@ -51,6 +51,13 @@ const SceneResults: React.FC<SceneResultsProps> = ({ currentImage, history, isGe
                             <>
                                 <img src={currentImage} alt="Scene Result" className="w-full h-full object-contain bg-gray-100" />
 
+                                {/* Resolution Badge */}
+                                {currentHistoryItem?.imageSize && (
+                                    <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-md">
+                                        {currentHistoryItem.imageSize}
+                                    </div>
+                                )}
+
                                 {/* Overlay Actions */}
                                 <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between">
                                     <button
@@ -99,6 +106,12 @@ const SceneResults: React.FC<SceneResultsProps> = ({ currentImage, history, isGe
                                     className={`aspect-auto min-h-[80px] max-h-[150px] rounded-xl overflow-hidden cursor-pointer border-2 transition-all group relative ${currentImage === item.imageUrl ? 'border-indigo-600 ring-2 ring-indigo-100' : 'border-transparent hover:border-indigo-300'}`}
                                 >
                                     <img src={item.imageUrl} alt="History" className="w-full h-full object-contain bg-gray-100" loading="lazy" />
+                                    {/* Resolution Badge */}
+                                    {item.imageSize && (
+                                        <div className="absolute top-1 right-1 bg-black/60 backdrop-blur-sm text-white text-[8px] font-bold px-1.5 py-0.5 rounded">
+                                            {item.imageSize}
+                                        </div>
+                                    )}
                                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                                 </div>
                             ))}

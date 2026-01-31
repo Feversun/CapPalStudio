@@ -530,7 +530,8 @@ const App: React.FC = () => {
         id: Date.now().toString(),
         prompt: prompt,
         imageUrl: imageUrl,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        imageSize: genConfig.imageSize
       };
 
       setSceneHistory(prev => [newItem, ...prev]);
