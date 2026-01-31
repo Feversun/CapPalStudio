@@ -12,6 +12,7 @@ import {
 } from './constants';
 import { analyzeImage, generateStickerImage, generateSceneImage, generateMasterCharacter, setForceLocalMode } from './services/gemini';
 import { saveState, loadState } from './services/db';
+import { saveToHistory, getHistory, HistoryItem } from './services/historyDB';
 
 const App: React.FC = () => {
   const [sourceImage, setSourceImage] = useState<string | null>(null);
@@ -37,7 +38,10 @@ const App: React.FC = () => {
   const [currentSceneImage, setCurrentSceneImage] = useState<string | null>(null);
   const [sceneAspectRatio, setSceneAspectRatio] = useState<string>('1:1');
 
-  const [activeTab, setActiveTab] = useState(0); // 0: Config/Inputs, 1: Results
+  const [activeTab, setActiveTab] = useState(0); // 0: Config/Inputs, 1: Results, 2: History
+
+  // History State
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
 
   // API Mode State - Default to LOCAL for this Antigravity version
   const [isLocalApi, setIsLocalApi] = useState(true);
@@ -113,6 +117,11 @@ const App: React.FC = () => {
           });
           setStickers(cleanStickers);
         }
+
+        // Load history from IndexedDB
+        const history = await getHistory(50); // Load last 50 items
+        setHistoryItems(history);
+        console.log(`[History] Loaded ${history.length} items from IndexedDB`);
 
         const savedHistory = await loadState<SceneHistoryItem[]>('sceneHistory');
         if (savedHistory) {
@@ -470,6 +479,30 @@ const App: React.FC = () => {
         }
       }
       setGenerationStatus(GenerationStatus.COMPLETED);
+
+      // Save completed stickers to history (IndexedDB)
+      const historyStyle = allStyles.find(s => s.id === selectedStyleId) || allStyles[0];
+      setStickers(prev => {
+        prev.filter(s => s.status === 'completed' && s.imageUrl).forEach(async (sticker) => {
+          const historyItem: HistoryItem = {
+            id: `${sticker.id}-${Date.now()}`,
+            emotion: sticker.emotion,
+            emoji: sticker.emoji,
+            imageUrl: sticker.imageUrl!,
+            finalPrompt: sticker.finalPrompt,
+            mode: mode,
+            style: historyStyle.name,
+            timestamp: Date.now()
+          };
+          await saveToHistory(historyItem);
+        });
+        return prev;
+      });
+
+      // Refresh history list
+      const updatedHistory = await getHistory(50);
+      setHistoryItems(updatedHistory);
+      console.log(`[History] Saved ${stickers.filter(s => s.status === 'completed').length} items to IndexedDB`);
 
     } catch (error: any) {
       console.error("Generation Flow Failed", error);
