@@ -618,7 +618,10 @@ Visual Style & Atmosphere:
 Negative Prompt: characters, people, animals, villagers, white background, studio background, miniature, toy model, trees, plants, flowers, bushes, leaves, grass blades, vegetation, trunk, branch, foreground objects, clutter, mountains, rock formations, steep hills.`;
 
 // 3. Furniture
-export const ACNH_FURNITURE_CONTENT_TEMPLATE = `**[Asset Definition & Layout]**
+export const ACNH_FURNITURE_CONTENT_TEMPLATE = `**[CRITICAL CAMERA REQUIREMENT]**
+**Orthographic Frontal View ONLY.** Every item must be rendered from a dead-on frontal angle (0° elevation). NO 3/4 view, NO isometric, NO diagonal angles, NO perspective distortion.
+
+**[Asset Definition & Layout]**
 A game asset sprite sheet containing isolated furniture elements. Items are arranged in a neat grid (Knolling style), completely separated with no overlaps.
 **Background:** Solid pure white background.
 
@@ -631,15 +634,17 @@ export const ACNH_FURNITURE_STYLE_TEMPLATE = `**[Visual Style Definition]**
 Style is 3D game asset render inspired by Animal Crossing: New Horizons.
 **IMPORTANT: Mimic ACNH's visual TEXTURE and QUALITY only — NOT specific element designs (e.g., do not copy ACNH's exact plant shapes or furniture designs). Reference the rendering quality, not the art assets.**
 
-* **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Objects have visible thickness and volume despite the frontal view.
+* **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Objects have visible thickness and volume.
 * **Texture:** Natural material feel — painted wood, soft fabric, matte ceramic. Avoid plastic or glossy surfaces.
 * **Lighting:** Soft, warm environmental lighting with gentle ambient occlusion. Subtle color bounce as if lit by a sunny window. No harsh studio lighting.
-* **Perspective:** **Strict front-facing view (dead-on elevation) for all items.** Objects are rendered straight-on, not iso/3D angle.
 
-**Negative Prompt:** characters, people, animals, villagers, touching edges, overlapping, flat 2D vector, lineless art, harsh outlines, realistic high-detail texture, noise, complex background, perspective distortion, isometric view, cast shadow, drop shadow, contact shadow, plastic, glossy, shiny.`;
+**Negative Prompt:** isometric, 3/4 view, angled view, diagonal angle, perspective distortion, characters, people, animals, villagers, touching edges, overlapping, flat 2D vector, lineless art, harsh outlines, realistic high-detail texture, noise, complex background, cast shadow, drop shadow, contact shadow, plastic, glossy, shiny.`;
 
 // 4. Outdoor
-export const ACNH_OUTDOOR_CONTENT_TEMPLATE = `**[Asset Definition & Layout]**
+export const ACNH_OUTDOOR_CONTENT_TEMPLATE = `**[CRITICAL CAMERA REQUIREMENT]**
+**Orthographic Frontal View ONLY.** Every item must be rendered from a dead-on frontal angle (0° elevation). NO 3/4 view, NO isometric, NO diagonal angles, NO perspective distortion.
+
+**[Asset Definition & Layout]**
 A game asset sprite sheet containing isolated OUTDOOR structures and furniture. Items are arranged in a neat grid (Knolling style), completely separated with no overlaps.
 **Background:** Solid pure white background.
 
@@ -653,10 +658,9 @@ Style is 3D game asset render inspired by Animal Crossing: New Horizons.
 **IMPORTANT: Mimic ACNH's visual TEXTURE and QUALITY only — NOT specific element designs. Reference the rendering quality, not the art assets.**
 
 * **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Even large structures should have this "toy-like" rounded quality.
-* **Lighting:** Soft, high-quality studio lighting. Gentle self-shadowing (ambient occlusion) to show that the objects are 3D, but no harsh cast shadows on the white background.
-* **Perspective:** **Strict front-facing view (dead-on elevation) for all items.** Objects are rendered straight-on, not iso/3D angle.
+* **Lighting:** Soft, warm environmental lighting with gentle ambient occlusion. No harsh cast shadows on the white background.
 
-**Negative Prompt:** characters, people, animals, villagers, touching edges, overlapping, flat 2D vector, lineless art, harsh outlines, realistic high-detail texture, noise, complex background, perspective distortion, isometric view, cast shadow, drop shadow, contact shadow.`;
+**Negative Prompt:** isometric, 3/4 view, angled view, diagonal angle, perspective distortion, characters, people, animals, villagers, touching edges, overlapping, flat 2D vector, lineless art, harsh outlines, realistic high-detail texture, noise, complex background, cast shadow, drop shadow, contact shadow.`;
 
 // 5. Vehicle
 export const ACNH_VEHICLE_CONTENT_TEMPLATE = `**[Asset Definition & Layout]**
@@ -706,7 +710,10 @@ Style is 3D game asset render inspired by Animal Crossing: New Horizons.
 **Negative Prompt:** isometric, square base, grid, map tile, technical drawing, sharp edges, cold lighting, realistic, low poly, glass reflection blocking view, text, labels, cast shadow, drop shadow, plastic, shiny, glossy.`;
 
 // 7. Miniature Encyclopedia
-export const MINIATURE_ENCYCLOPEDIA_CONTENT_TEMPLATE = `**[Asset Definition & Layout]**
+export const MINIATURE_ENCYCLOPEDIA_CONTENT_TEMPLATE = `**[CRITICAL CAMERA REQUIREMENT]**
+**Orthographic Frontal View ONLY.** Every item must be rendered from a dead-on frontal angle (0° elevation). NO 3/4 view, NO isometric, NO diagonal angles.
+
+**[Asset Definition & Layout]**
 A game asset sprite sheet containing **{{count}} Isolated Cute Items** for the city of **{{city_name}}**.
 Layout: Grid alignment fitting {{count}} items.
 **Background:** Solid pure white background.
@@ -722,12 +729,14 @@ Style is 3D game asset render inspired by Animal Crossing: New Horizons.
 * **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Objects have visible thickness and volume.
 * **Texture:** Natural material feel — painted wood, ceramic, woven fabric. Warm, handcrafted appearance. Avoid plastic or glossy surfaces.
 * **Lighting:** Soft, warm environmental lighting with gentle ambient occlusion. Subtle color bounce as if lit by a cozy window. No harsh studio lighting.
-* **Perspective:** **Strict front-facing view (dead-on elevation) for all items.** Objects are rendered straight-on, not iso/3D angle.
 
-**Negative Prompt:** characters, people, animals, villagers, touching edges, overlapping, flat 2D vector, lineless art, harsh outlines, text, labels, watermark, realistic food, photorealistic, sharp edges, isometric, cast shadow, drop shadow, contact shadow, plastic, shiny, glossy.`;
+**Negative Prompt:** isometric, 3/4 view, angled view, diagonal angle, perspective distortion, characters, people, animals, villagers, touching edges, overlapping, flat 2D vector, lineless art, harsh outlines, text, labels, watermark, realistic food, photorealistic, sharp edges, cast shadow, drop shadow, contact shadow, plastic, shiny, glossy.`;
 
 // 8. Miniature Icon
-export const MINIATURE_ICON_CONTENT_TEMPLATE = `**[Asset Definition & Layout]**
+export const MINIATURE_ICON_CONTENT_TEMPLATE = `**[CRITICAL CAMERA REQUIREMENT]**
+**Orthographic Frontal View ONLY.** Every item must be rendered from a dead-on frontal angle (0° elevation). NO 3/4 view, NO isometric, NO diagonal angles.
+
+**[Asset Definition & Layout]**
 A game asset sprite sheet containing **{{count}} Isolated UI Icons** for **{{theme_name}}**.
 Layout: Grid alignment fitting {{count}} items.
 **Background:** Solid pure white background.
@@ -739,11 +748,10 @@ Generate exactly these {{count}} items:
 export const MINIATURE_ICON_STYLE_TEMPLATE = `**[Visual Style Definition]**
 Style is 3D game asset render.
 * **Concept:** High-quality, chunky, tactile 3D icons for a user interface.
-* **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Objects have visible thickness and volume despite the frontal view.
-* **Lighting:** Soft, high-quality studio lighting. Gentle self-shadowing (ambient occlusion) to show that the objects are 3D, but no harsh cast shadows on the white background.
-* **Perspective:** **Strict front-facing view (dead-on elevation) for all items.** Objects are rendered straight-on, not iso/3D angle.
+* **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Objects have visible thickness and volume.
+* **Lighting:** Soft, warm environmental lighting with gentle ambient occlusion. No harsh cast shadows on the white background.
 
-**Negative Prompt:** flat 2D, vector, outline, sketch, realistic, dirty, gritty, noise, pixelated, text, numbers, watermark, cropped, low resolution, complex background, cast shadow, drop shadow, contact shadow, isometric.`;
+**Negative Prompt:** isometric, 3/4 view, angled view, diagonal angle, flat 2D, vector, outline, sketch, realistic, dirty, gritty, noise, pixelated, text, numbers, watermark, cropped, low resolution, complex background, cast shadow, drop shadow, contact shadow.`;
 
 // --- DEPRECATED FULL TEMPLATES (Kept for type safety if needed, but unused) ---
 export const ACNH_SCENE_PROMPT_TEMPLATE = ACNH_SCENE_CONTENT_TEMPLATE + "\n\n" + ACNH_SCENE_STYLE_TEMPLATE;
