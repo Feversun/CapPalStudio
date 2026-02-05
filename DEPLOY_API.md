@@ -92,6 +92,27 @@ systemctl status cappal-api.service --no-pager
 
 This API is intended to be reached over your private Tailscale network. If you bind to `0.0.0.0`, avoid exposing the port publicly unless you add authentication.
 
+## Firewall (UFW) – Allow Tailscale Only
+
+If you use UFW, the pattern below allows port `8787` only on `tailscale0` and blocks it on public interfaces. Adjust the interface name if yours differs.
+
+```bash
+# Allow SSH (avoid locking yourself out)
+ufw allow OpenSSH
+
+# Allow CapPal API only over Tailscale
+ufw allow in on tailscale0 to any port 8787 proto tcp
+
+# Block public access to 8787
+ufw deny 8787/tcp
+
+# Enable UFW if not already enabled
+ufw enable
+ufw status verbose
+```
+
+Tip: Confirm your Tailscale interface name with `ip addr` (usually `tailscale0`).
+
 ## Logs
 
 ```bash
