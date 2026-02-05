@@ -16,6 +16,7 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 
+const HOST = process.env.CAPPAL_API_HOST || "0.0.0.0";
 const PORT = parseInt(process.env.CAPPAL_API_PORT || "8787", 10);
 const DEFAULT_PROVIDER = (process.env.CAPPAL_PROVIDER || "local").toLowerCase();
 const DEFAULT_LOCAL_URL = process.env.CAPPAL_LOCAL_BASE_URL || "http://localhost:8080";
@@ -146,7 +147,6 @@ app.post("/v1/encyclopedia", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`[CapPal API] listening on http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`[CapPal API] listening on http://${HOST}:${PORT}`);
 });
-

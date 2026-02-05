@@ -17,6 +17,6 @@ View your app in AI Studio: https://ai.studio/apps/drive/1V0Olahg69fSIPO0sEvDatQ
    `npm install`
 2. (Optional) Set the `GEMINI_API_KEY` in `.env.local` if you want Cloud mode
 3. Start the headless API service:
-   `npm run api`
+   `CAPPAL_API_HOST=0.0.0.0 CAPPAL_API_PORT=8787 npm run api`
 4. Run the app:
    `npm run dev`
