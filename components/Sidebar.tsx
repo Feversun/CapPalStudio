@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { StickerStyle, GenerationMode, SheetGridConfig, PromptVersion, SheetMode, SheetActionItem, ConsistencyMode, GenerationConfig } from '../types';
 import { STYLES, PRESET_IMAGES, GET_MOTION_DESCRIPTION, WIDGET_SCENARIOS } from '../constants';
 import SceneGeneratorInputs from './SceneGenerator';
-import { setLocalBaseUrl } from '../services/gemini';
+import { setLocalBaseUrl, setLocalApiStyle } from '../services/gemini';
 
 interface SidebarProps {
   sourceImage: string | null;
@@ -85,6 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   // Local URL State
   const [localTunnelUrl, setLocalTunnelUrl] = useState("https://summit-product-arrested-crew.trycloudflare.com");
   const [isUrlDirty, setIsUrlDirty] = useState(false);
+  const [localApiStyle, setLocalApiStyleState] = useState<'gemini' | 'anthropic'>('gemini');
 
   // Settings Overlay State
   const [showGenSettings, setShowGenSettings] = useState(false);
@@ -100,6 +101,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       if (savedUrl) {
         setLocalTunnelUrl(savedUrl);
         setLocalBaseUrl(savedUrl);
+      }
+      const savedStyle = localStorage.getItem('stickerGen_localApiStyle');
+      if (savedStyle === 'gemini' || savedStyle === 'anthropic') {
+        setLocalApiStyleState(savedStyle);
+        setLocalApiStyle(savedStyle);
       }
     } catch (e) { console.error('Failed to load versions', e); }
   }, []);
@@ -354,6 +360,24 @@ const Sidebar: React.FC<SidebarProps> = ({
               >
                 {isUrlDirty ? 'SAVE' : 'OK'}
               </button>
+            </div>
+            <div className="mt-3">
+              <label className="text-[10px] font-bold text-orange-800 uppercase tracking-wider block mb-1">
+                Local API Mode
+              </label>
+              <select
+                value={localApiStyle}
+                onChange={(e) => {
+                  const value = e.target.value as 'gemini' | 'anthropic';
+                  setLocalApiStyleState(value);
+                  setLocalApiStyle(value);
+                  localStorage.setItem('stickerGen_localApiStyle', value);
+                }}
+                className="w-full text-[10px] px-2 py-1.5 border border-orange-200 rounded text-gray-700 focus:border-orange-500 outline-none font-mono bg-white"
+              >
+                <option value="gemini">Quotio / Gemini REST</option>
+                <option value="anthropic">Antigravity Proxy (Image Mode)</option>
+              </select>
             </div>
           </div>
         )}

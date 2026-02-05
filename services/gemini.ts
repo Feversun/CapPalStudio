@@ -3,9 +3,11 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { SheetActionItem, GenerationConfig } from "../types";
 
 // Configuration for Local Fallback API
+type LocalApiStyle = 'gemini' | 'anthropic';
 const LOCAL_API_CONFIG = {
   apiKey: "quotio-local-192E2655-C2D0-4594-ABD2-6B30F20451C4",
-  baseUrl: "http://localhost:8317"
+  baseUrl: "http://localhost:8317",
+  apiStyle: 'gemini' as LocalApiStyle
 };
 
 // Global Cloud Client Instance
@@ -30,6 +32,12 @@ export const setForceLocalMode = (enable: boolean) => {
 export const setLocalBaseUrl = (url: string) => {
   LOCAL_API_CONFIG.baseUrl = url.replace(/\/$/, "");
   console.log(`[Gemini Service] Local Base URL updated to: ${LOCAL_API_CONFIG.baseUrl}`);
+};
+
+// Update Local API Style Function
+export const setLocalApiStyle = (style: LocalApiStyle) => {
+  LOCAL_API_CONFIG.apiStyle = style;
+  console.log(`[Gemini Service] Local API style set to: ${style}`);
 };
 
 /**
@@ -108,6 +116,143 @@ const localGeminiFetch = async (
 };
 
 /**
+ * Convert Gemini-style contents to Anthropic Messages API format.
+ */
+const toAnthropicMessages = (contents: any): any[] => {
+  const normalized = Array.isArray(contents) ? contents : [contents];
+
+  return normalized.map((item: any) => {
+    if (typeof item === 'string') {
+      return { role: 'user', content: item };
+    }
+
+    const role = item?.role === 'model' ? 'assistant' : (item?.role || 'user');
+    const parts = Array.isArray(item?.parts) ? item.parts : [];
+    const content = parts.map((p: any) => {
+      if (p?.text !== undefined) {
+        return { type: 'text', text: String(p.text) };
+      }
+      if (p?.inlineData) {
+        return {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: p.inlineData.mimeType || 'image/png',
+            data: p.inlineData.data
+          }
+        };
+      }
+      if (p?.fileData?.fileUri) {
+        return {
+          type: 'image',
+          source: {
+            type: 'url',
+            media_type: p.fileData.mimeType || 'image/png',
+            url: p.fileData.fileUri
+          }
+        };
+      }
+      return null;
+    }).filter(Boolean);
+
+    if (content.length === 0) {
+      return { role, content: '.' };
+    }
+
+    return { role, content };
+  });
+};
+
+/**
+ * Convert Anthropic response to a Gemini-like response for compatibility.
+ */
+const toGeminiLikeResponse = (anthropicResponse: any) => {
+  const parts: any[] = [];
+  const content = Array.isArray(anthropicResponse?.content) ? anthropicResponse.content : [];
+
+  for (const block of content) {
+    if (block?.type === 'text') {
+      parts.push({ text: block.text });
+    } else if (block?.type === 'image' && block?.source?.type === 'base64') {
+      parts.push({
+        inlineData: {
+          mimeType: block.source.media_type || 'image/png',
+          data: block.source.data
+        }
+      });
+    }
+  }
+
+  return {
+    text: parts.map(p => p.text).filter(Boolean).join('') || undefined,
+    candidates: [{ content: { parts } }]
+  };
+};
+
+/**
+ * LOCAL ANTHROPIC FETCH (Antigravity Claude Proxy Image Mode)
+ */
+const localAnthropicFetch = async (
+  model: string,
+  contents: any,
+  config: any = {}
+): Promise<any> => {
+  const url = `${LOCAL_API_CONFIG.baseUrl}/v1/messages`;
+  let localModel = model;
+
+  // Map unsupported Gemini 2.5 models to proxy-supported Gemini 3 equivalents
+  const lower = model.toLowerCase();
+  if (lower.includes('gemini-2.5-flash-image')) {
+    localModel = 'gemini-3-flash-image-preview';
+  } else if (lower.includes('gemini-2.5-flash-lite')) {
+    localModel = 'gemini-3-flash';
+  } else if (lower.includes('gemini-2.5-flash')) {
+    localModel = 'gemini-3-flash';
+  } else if (lower.includes('gemini-2.5-pro')) {
+    localModel = 'gemini-3-pro-high';
+  }
+
+  if (localModel !== model) {
+    console.log(`[Local Anthropic] Model mapped: ${model} -> ${localModel}`);
+  }
+
+  const messages = toAnthropicMessages(contents);
+  const isImage = localModel.includes('image');
+
+  const payload: any = {
+    model: localModel,
+    messages,
+    stream: false,
+    mode: isImage ? 'image' : 'text'
+  };
+
+  if (config.maxOutputTokens !== undefined) payload.max_tokens = config.maxOutputTokens;
+  if (config.temperature !== undefined) payload.temperature = config.temperature;
+  if (config.topP !== undefined) payload.top_p = config.topP;
+  if (config.topK !== undefined) payload.top_k = config.topK;
+
+  console.log(`%c[Local Anthropic] POST ${url}`, "color: orange; font-weight: bold;");
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${LOCAL_API_CONFIG.apiKey}`
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error(`[Local Anthropic Error] ${response.status}:`, errText);
+    throw new Error(`Proxy Error ${response.status}: ${errText}`);
+  }
+
+  const data = await response.json();
+  return toGeminiLikeResponse(data);
+};
+
+/**
  * Unified request handler that switches between SDK (Cloud) and Fetch (Local)
  */
 const makeRequest = async (
@@ -117,6 +262,10 @@ const makeRequest = async (
 ): Promise<any> => {
   // 1. LOCAL MODE
   if (useFallback) {
+    if (LOCAL_API_CONFIG.apiStyle === 'anthropic') {
+      return await localAnthropicFetch(model, contents, config);
+    }
+
     let localModel = model;
 
     // MAP TO USER-SPECIFIED MODEL ID for Image Generation
