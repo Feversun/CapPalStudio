@@ -20,6 +20,9 @@ export interface Sticker {
   finalPrompt?: string; // The actual prompt used to generate this specific image
   status: 'pending' | 'generating' | 'completed' | 'failed';
   error?: string;
+  seed?: number;
+  model?: string;
+  imageSize?: string;
 }
 
 export interface SceneHistoryItem {
@@ -28,6 +31,8 @@ export interface SceneHistoryItem {
   imageUrl: string;
   timestamp: number;
   imageSize?: '1K' | '2K' | '4K';
+  seed?: number;
+  model?: string;
 }
 
 export interface GenerationConfig {

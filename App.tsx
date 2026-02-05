@@ -12,7 +12,7 @@ import {
 } from './constants';
 import { analyzeImage, generateStickerImage, generateSceneImage, generateMasterCharacter, setForceLocalMode } from './services/gemini';
 import { saveState, loadState } from './services/db';
-import { saveToHistory, getHistory, HistoryItem } from './services/historyDB';
+import { saveToHistory, getHistory, getHistoryByMode, HistoryItem } from './services/historyDB';
 
 const App: React.FC = () => {
   const [sourceImage, setSourceImage] = useState<string | null>(null);
@@ -55,7 +55,7 @@ const App: React.FC = () => {
     topP: 0.95,
     topK: 64,
     seed: undefined,
-    imageSize: '4K', // Default to 4K for production quality
+    imageSize: '2K', // Default to 2K as requested
     model: 'gemini-3-pro-image-preview' // Use Gemini 3 Pro for best quality
   });
 
@@ -118,16 +118,58 @@ const App: React.FC = () => {
           setStickers(cleanStickers);
         }
 
-        // Load history from IndexedDB
-        const history = await getHistory(50); // Load last 50 items
-        setHistoryItems(history);
-        console.log(`[History] Loaded ${history.length} items from IndexedDB`);
+        // Load filtered history from IndexedDB (Unlimited & Independent)
+        const allMixed = await getHistory(1000);
+        const stickersOnly = allMixed.filter(h => h.mode !== 'scene').slice(0, 500);
+        setHistoryItems(stickersOnly);
+        console.log(`[History] Loaded ${stickersOnly.length} stickers from IndexedDB`);
 
-        const savedHistory = await loadState<SceneHistoryItem[]>('sceneHistory');
-        if (savedHistory) {
-          setSceneHistory(savedHistory);
-          if (savedHistory.length > 0) setCurrentSceneImage(savedHistory[0].imageUrl);
+        // Load Scenes specifically (Dedicated 500 limit)
+        const sceneHistoryItems = await getHistoryByMode('scene', 500);
+
+        // MIGRATION: Check for legacy scene history in old DB
+        const legacySceneHistory = await loadState<SceneHistoryItem[]>('sceneHistory');
+
+        if (sceneHistoryItems.length === 0 && legacySceneHistory && legacySceneHistory.length > 0) {
+          console.log(`[History] Migrating ${legacySceneHistory.length} legacy scenes to unified DB`);
+          // Migrate legacy items
+          for (const legacy of legacySceneHistory) {
+            const newHistoryItem: HistoryItem = {
+              id: legacy.id,
+              emotion: "Scene",
+              emoji: "🎨",
+              imageUrl: legacy.imageUrl,
+              finalPrompt: legacy.prompt,
+              mode: 'scene',
+              style: 'Standard',
+              timestamp: legacy.timestamp,
+              imageSize: legacy.imageSize,
+              seed: legacy.seed,
+              model: legacy.model
+            };
+            await saveToHistory(newHistoryItem);
+            // Push to front of sceneHistoryItems (since we are iterating legacy which is likely sorted new->old)
+            // legacySceneHistory is likely [newest, ..., oldest]
+            sceneHistoryItems.push(newHistoryItem as any);
+          }
+          // Clear legacy to avoid double migration next time
+          await saveState('sceneHistory', []);
         }
+
+        // Map HistoryItem back to SceneHistoryItem for state
+        const mappedScenes: SceneHistoryItem[] = sceneHistoryItems.map(h => ({
+          id: h.id,
+          prompt: h.finalPrompt || '',
+          imageUrl: h.imageUrl,
+          timestamp: h.timestamp,
+          imageSize: h.imageSize as any,
+          seed: h.seed,
+          model: h.model
+        }));
+
+        setSceneHistory(mappedScenes);
+        if (mappedScenes.length > 0) setCurrentSceneImage(mappedScenes[0].imageUrl);
+
         const savedAnalysis = await loadState<{ id: string, subject: string, style: string }>('analysis');
         if (savedAnalysis) setAnalysisCache(savedAnalysis);
       } catch (e) { console.error("Failed to load from DB", e); }
@@ -146,7 +188,7 @@ const App: React.FC = () => {
         if (sourceImage) await saveState('sourceImage', sourceImage);
         if (masterImage) await saveState('masterImage', masterImage);
         await saveState('stickers', stickers);
-        await saveState('sceneHistory', sceneHistory.slice(0, 20));
+        // await saveState('sceneHistory', sceneHistory); // REMOVED: Managed by historyDB now
         if (analysisCache) await saveState('analysis', analysisCache);
       } catch (e) { console.error("Storage save failed", e); }
     }
@@ -300,7 +342,7 @@ const App: React.FC = () => {
         result = await generateStickerImage(
           imageSourceToUse, subjectDesc, stickerToRegenerate.emotion, selectedStyle.prompt,
           true, activeActions, sheetPromptTemplate, gridConfig.rows, gridConfig.cols, sheetMode,
-          SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT, genConfig
+          SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT, runConfig
         );
       } else {
         // Pack or Widget
@@ -309,11 +351,11 @@ const App: React.FC = () => {
         result = await generateStickerImage(
           imageSourceToUse, subjectDesc, stickerToRegenerate.emotion, selectedStyle.prompt,
           false, [], "", 1, 1, moduleName,
-          "", "", genConfig
+          "", "", runConfig
         );
       }
 
-      setStickers(prev => prev.map((s, i) => i === index ? { ...s, imageUrl: result.imageUrl, finalPrompt: result.prompt, status: 'completed' } : s));
+      setStickers(prev => prev.map((s, i) => i === index ? { ...s, imageUrl: result.imageUrl, finalPrompt: result.prompt, status: 'completed', seed: seedToUse, model: genConfig.model } : s));
       setQuotaUsage(prev => Math.min(prev + 2, 100));
 
     } catch (error: any) {
@@ -387,14 +429,18 @@ const App: React.FC = () => {
           const megaRows = limitedActions.length; // 1 row per action, max 7
           const megaCols = 8; // 8 frames per animation
 
+          // Use provided seed or generate random one
+          const seedToUse = genConfig.seed !== undefined ? genConfig.seed : Math.floor(Math.random() * 4294967295);
+          const runConfig = { ...genConfig, seed: seedToUse };
+
           const result = await generateStickerImage(
             masterImage || sourceImage, subjectDesc, "Mega Sprite Sheet", selectedStyle.prompt,
             true, limitedActions, sheetPromptTemplate, megaRows, megaCols, sheetMode,
-            SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT, genConfig
+            SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT, runConfig
           );
 
           setStickers(prev => prev.map(s => ({
-            ...s, imageUrl: result.imageUrl, finalPrompt: result.prompt, status: 'completed'
+            ...s, imageUrl: result.imageUrl, finalPrompt: result.prompt, status: 'completed', seed: seedToUse, model: genConfig.model
           })));
           setQuotaUsage(prev => Math.min(prev + 5, 100));
         } else {
@@ -411,17 +457,32 @@ const App: React.FC = () => {
             setStickers(prev => prev.map(s => s.id === sticker.id ? { ...s, status: 'generating' } : s));
 
             try {
+              // Use provided seed or generate random one
+              const seedToUse = genConfig.seed !== undefined ? genConfig.seed : Math.floor(Math.random() * 4294967295);
+              const runConfig = { ...genConfig, seed: seedToUse };
+
               // Generate a single sprite sheet for THIS action only
               const result = await generateStickerImage(
                 currentReferenceImage, subjectDesc, action.label, selectedStyle.prompt,
                 true, [action], sheetPromptTemplate, gridConfig.rows, gridConfig.cols, sheetMode,
-                SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT, genConfig
+                SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT, runConfig
               );
 
-              setStickers(prev => prev.map(s => s.id === sticker.id
-                ? { ...s, imageUrl: result.imageUrl, finalPrompt: result.prompt, status: 'completed' }
-                : s
-              ));
+              setStickers(prev => {
+                const newStickers = [...prev];
+                const index = newStickers.findIndex(s => s.id === sticker.id);
+                if (index !== -1) {
+                  newStickers[index] = {
+                    ...newStickers[index],
+                    imageUrl: result.imageUrl,
+                    finalPrompt: result.prompt,
+                    status: 'completed',
+                    seed: seedToUse, // Save seed
+                    model: genConfig.model
+                  };
+                }
+                return newStickers;
+              });
               setQuotaUsage(prev => Math.min(prev + 3, 100));
 
               // Use first result as reference for subsequent generations (consistency mode)
@@ -500,7 +561,7 @@ const App: React.FC = () => {
       });
 
       // Refresh history list
-      const updatedHistory = await getHistory(50);
+      const updatedHistory = await getHistory(500);
       setHistoryItems(updatedHistory);
       console.log(`[History] Saved ${stickers.filter(s => s.status === 'completed').length} items to IndexedDB`);
 
@@ -516,14 +577,19 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSceneGenerate = async (prompt: string, aspectRatio: string) => {
+  const handleSceneGenerate = async (prompt: string, aspectRatio: string, referenceImages: string[] = []) => {
     setGenerationStatus(GenerationStatus.GENERATING);
     setCurrentSceneImage(null); // Clear previous to show loading
     setSceneAspectRatio(aspectRatio);
 
+    // Determine seed (use existing or generate new random one for tracking)
+    // Fix: Clamp to Signed 32-bit integer range (max 2,147,483,647) to avoid Gemini API errors
+    const seedToUse = genConfig.seed !== undefined ? genConfig.seed : Math.floor(Math.random() * 2147483647);
+    const runConfig = { ...genConfig, seed: seedToUse };
+
     try {
-      // Pass genConfig
-      const imageUrl = await generateSceneImage(prompt, aspectRatio, genConfig);
+      // Pass runConfig with explicit seed and reference images
+      const imageUrl = await generateSceneImage(prompt, aspectRatio, runConfig, referenceImages);
       setCurrentSceneImage(imageUrl);
 
       const newItem: SceneHistoryItem = {
@@ -531,12 +597,30 @@ const App: React.FC = () => {
         prompt: prompt,
         imageUrl: imageUrl,
         timestamp: Date.now(),
-        imageSize: genConfig.imageSize
+        imageSize: genConfig.imageSize,
+        seed: seedToUse,
+        model: genConfig.model
       };
 
       setSceneHistory(prev => [newItem, ...prev]);
       setGenerationStatus(GenerationStatus.IDLE);
       setQuotaUsage(prev => Math.min(prev + 5, 100));
+
+      // Save to unified HistoryDB
+      await saveToHistory({
+        id: newItem.id,
+        emotion: "Scene",
+        emoji: "🎨",
+        imageUrl: newItem.imageUrl,
+        finalPrompt: newItem.prompt,
+        mode: 'scene',
+        style: 'Standard',
+        timestamp: newItem.timestamp,
+        imageSize: newItem.imageSize,
+        seed: newItem.seed,
+        model: newItem.model
+      });
+
     } catch (error) {
       console.error("Scene generation failed", error);
       setGenerationStatus(GenerationStatus.FAILED);

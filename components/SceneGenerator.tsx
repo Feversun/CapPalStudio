@@ -17,10 +17,11 @@ import {
     MINIATURE_ICON_CONTENT_TEMPLATE, MINIATURE_ICON_STYLE_TEMPLATE,
     ICON_THEMES, ICONS_RV_TRAVEL, ICONS_OUTDOOR_CAMPING,
     UNIFIED_ELEMENT_THEMES,
-    RENDER_STYLES, DEFAULT_RENDER_STYLE, RenderStyleId
+    RENDER_STYLES, DEFAULT_RENDER_STYLE, RenderStyleId,
+    REFERENCE_GROUPS // Import new groups constant
 } from '../constants';
 import { PromptVersion } from '../types';
-import { generateCityEncyclopediaList } from '../services/gemini';
+import { generateCityEncyclopediaList, CityEncyclopediaItem } from '../services/gemini';
 
 type SceneMode = 'landscape' | 'element' | 'miniature';
 type ElementSubMode = 'furniture' | 'vehicle' | 'outdoor';
@@ -34,7 +35,7 @@ interface CustomOption {
 }
 
 interface SceneGeneratorProps {
-    onGenerate: (prompt: string, aspectRatio: string) => void;
+    onGenerate: (prompt: string, aspectRatio: string, referenceImages?: string[]) => void;
     isGenerating: boolean;
     onPromptChange?: (prompt: string) => void;
 }
@@ -47,17 +48,42 @@ interface WorldItem {
 
 interface EncyclopediaItem {
     id: string;
+    name: string;
+    description: string;
+    enabled: boolean;
+}
+
+interface IconItem {
+    id: string;
     text: string;
     enabled: boolean;
 }
 
-const GENERIC_ENCYCLOPEDIA_DEFAULTS = [
-    "Famous Local Dish", "Traditional Drink", "Iconic Landmark Model", "Public Transport Vehicle",
-    "Traditional Hat/Clothing", "Historic Architecture", "Native Flower/Plant", "Street Lamp/Sign",
-    "Cultural Festival Item", "Local Musical Instrument", "Handicraft/Pottery", "Market Stall",
-    "Cute Local Animal", "Postbox/Phone Booth", "Flag/Emblem", "Cafe Set",
-    "Bridge/Archway", "Religious/Spiritual Symbol", "Local Dessert", "Vintage Map",
-    "Travel Suitcase", "Camera/Binoculars", "Ticket/Passport", "Souvenir Magnet"
+const GENERIC_ENCYCLOPEDIA_DEFAULTS: { name: string; description: string }[] = [
+    { name: "Famous Local Dish", description: "A signature culinary creation deeply rooted in the city's gastronomic heritage." },
+    { name: "Traditional Drink", description: "A beloved beverage that captures the essence of local drinking culture." },
+    { name: "Iconic Landmark Model", description: "A miniature replica of the city's most recognizable architectural symbol." },
+    { name: "Public Transport Vehicle", description: "A charming representation of the city's distinctive transit system." },
+    { name: "Traditional Hat/Clothing", description: "Traditional attire that reflects the city's cultural identity and craftsmanship." },
+    { name: "Historic Architecture", description: "A piece showcasing the city's unique architectural heritage and design." },
+    { name: "Native Flower/Plant", description: "A botanical symbol that represents the region's natural beauty." },
+    { name: "Street Lamp/Sign", description: "An iconic urban element that defines the city's streetscape character." },
+    { name: "Cultural Festival Item", description: "An artifact from a celebrated local festival or tradition." },
+    { name: "Local Musical Instrument", description: "A traditional instrument that carries the city's musical heritage." },
+    { name: "Handicraft/Pottery", description: "Artisanal craftsmanship passed down through generations." },
+    { name: "Market Stall", description: "A vibrant representation of local commerce and community gathering." },
+    { name: "Cute Local Animal", description: "An adorable creature symbolic of the region's wildlife." },
+    { name: "Postbox/Phone Booth", description: "A nostalgic piece of urban infrastructure with historical charm." },
+    { name: "Flag/Emblem", description: "Official symbols representing the city's identity and pride." },
+    { name: "Cafe Set", description: "Charming tableware reflecting local café culture." },
+    { name: "Bridge/Archway", description: "An architectural connection that has become a city landmark." },
+    { name: "Religious/Spiritual Symbol", description: "A sacred item representing local spiritual traditions." },
+    { name: "Local Dessert", description: "A sweet treat that embodies the city's confectionery traditions." },
+    { name: "Vintage Map", description: "A historical cartographic treasure showing the city's evolution." },
+    { name: "Travel Suitcase", description: "A classic travel companion evoking wanderlust and adventure." },
+    { name: "Camera/Binoculars", description: "Essential tools for capturing and exploring the city's beauty." },
+    { name: "Ticket/Passport", description: "Travel documents symbolizing journey and discovery." },
+    { name: "Souvenir Magnet", description: "A collectible keepsake capturing memorable city moments." }
 ];
 
 const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGenerating, onPromptChange }) => {
@@ -78,6 +104,8 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
 
     // Render Style State (global)
     const [renderStyle, setRenderStyle] = useState<RenderStyleId>(DEFAULT_RENDER_STYLE);
+    // Reference Group State
+    const [selectedRefGroupId, setSelectedRefGroupId] = useState(REFERENCE_GROUPS[0].id);
 
     // Miniature Specific State
     const [miniatureMode, setMiniatureMode] = useState<MiniatureSubMode>('collection');
@@ -92,14 +120,15 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
 
     // Initialize with GENERIC DEFAULTS immediately
     const [encyclopediaItems, setEncyclopediaItems] = useState<EncyclopediaItem[]>(
-        GENERIC_ENCYCLOPEDIA_DEFAULTS.map((text, idx) => ({
+        GENERIC_ENCYCLOPEDIA_DEFAULTS.map((item, idx) => ({
             id: idx.toString(),
-            text: text,
+            name: item.name,
+            description: item.description,
             enabled: true
         }))
     );
 
-    const [iconItems, setIconItems] = useState<EncyclopediaItem[]>(
+    const [iconItems, setIconItems] = useState<IconItem[]>(
         ICONS_RV_TRAVEL.map((item) => ({
             id: item.id,
             text: item.text,
@@ -144,6 +173,18 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
         setMode(newMode);
         setCustomLocations([]);
         // Reset selections
+        if (newMode === 'element' || newMode === 'miniature') {
+            setAspectRatio('16:9'); // Default to Landscape for these modes
+        } else {
+            setAspectRatio('1:1'); // Default to square for landscape
+        }
+
+        if (newMode === 'element') {
+            setRenderStyle('flocked');
+        } else if (newMode === 'landscape') {
+            setRenderStyle('standard'); // Revert to standard for landscape usually
+        }
+
         if (newMode === 'landscape') setSelectedLocationId(SCENE_LOCATIONS[0].id);
         else if (newMode === 'miniature') setSelectedLocationId(MINIATURE_THEMES[0].id);
         else if (newMode === 'element') {
@@ -218,7 +259,7 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
                 const enabledItems = encyclopediaItems.filter(i => i.enabled);
                 const count = enabledItems.length;
                 const itemListStr = enabledItems.length > 0
-                    ? enabledItems.map((item, i) => `${i + 1}. ${item.text}`).join('\n')
+                    ? enabledItems.map((item, i) => `${i + 1}. ${item.name}`).join('\n')
                     : "[Item list is empty]";
 
                 newContentPrompt = MINIATURE_ENCYCLOPEDIA_CONTENT_TEMPLATE
@@ -254,7 +295,10 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
                 const slotItems = INTERIOR_SLOTS.map((slot, idx) => {
                     const selectedOptionId = slotSelections[slot.id];
                     const option = slot.options.find(o => o.id === selectedOptionId);
-                    return `${idx + 1}. ${option?.name || slot.options[0].name}`;
+                    const itemName = option?.name || slot.options[0].name;
+                    // Append category-level camera instruction if it exists
+                    const instruction = slot.cameraInstruction ? ` ${slot.cameraInstruction}` : "";
+                    return `${idx + 1}. ${itemName}${instruction}`;
                 });
                 elementsString = slotItems.join('\n');
             } else {
@@ -308,16 +352,24 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
             newStylePrompt = newStylePrompt.replace('{{lighting}}', lightingPrompt);
         }
 
-        setContentPrompt(newContentPrompt);
-        setStylePrompt(newStylePrompt);
-
         // Get render style material prompt
         const renderStyleObj = RENDER_STYLES.find(s => s.id === renderStyle);
         const materialPrompt = renderStyleObj?.materialPrompt || '';
 
-        // Parent update gets full prompt with material style
-        const fullPrompt = `${newContentPrompt}\n\n${newStylePrompt}\n\n${materialPrompt}`;
-        if (onPromptChange) onPromptChange(fullPrompt);
+        // UI Update: Update content prompt regardless of style
+        setContentPrompt(newContentPrompt);
+
+        // UI Update: Append material style to the displayed style prompt
+        // If Image Ref is selected, we REPLACE the style prompt with the specific instructions to avoid conflict
+        if (renderStyle === 'image_ref') {
+            setStylePrompt(materialPrompt);
+            const fullPrompt = `${newContentPrompt}\n\n${materialPrompt}`;
+            if (onPromptChange) onPromptChange(fullPrompt);
+        } else {
+            setStylePrompt(`${newStylePrompt}\n\n${materialPrompt}`);
+            const fullPrompt = `${newContentPrompt}\n\n${newStylePrompt}\n\n${materialPrompt}`;
+            if (onPromptChange) onPromptChange(fullPrompt);
+        }
 
     }, [mode, elementSubMode, selectedElementThemeId, selectedLocationId, selectedElementIds, customElement, isManuallyEdited, customLocations, landscapeVariant, selectedTimeId, selectedSeasonId, miniatureMode, encyclopediaItems, worldItems, iconItems, selectedIconThemeId, slotSelections, renderStyle]);
 
@@ -327,21 +379,43 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
         setIsManuallyEdited(false);
     };
 
-    const handleGenerateClick = () => {
+    const handleGenerateClick = async () => {
         if (mode === 'miniature' && miniatureMode === 'encyclopedia' && encyclopediaItems.filter(i => i.enabled).length === 0) {
             alert("Please check at least one item!");
             return;
         }
-        if (mode === 'miniature' && miniatureMode === 'collection' && worldItems.filter(i => i.enabled).length === 0) {
-            alert("Please select at least one city!");
-            return;
+
+        if (!contentPrompt || !stylePrompt) return;
+
+        const fullPrompt = `
+${contentPrompt}
+
+${stylePrompt}
+`.trim();
+
+        // Image Ref Logic
+        let refImages: string[] = [];
+        if (renderStyle === 'image_ref') {
+            const targetGroup = REFERENCE_GROUPS.find(g => g.id === selectedRefGroupId) || REFERENCE_GROUPS[0];
+            console.log(`Image Ref Style: Using group '${targetGroup.name}'`);
+            try {
+                const imagePromises = targetGroup.images.map(async (path) => {
+                    const response = await fetch(path);
+                    const blob = await response.blob();
+                    return new Promise<string>((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result as string);
+                        reader.readAsDataURL(blob);
+                    });
+                });
+                refImages = await Promise.all(imagePromises);
+                console.log(`Fetched ${refImages.length} reference images.`);
+            } catch (error) {
+                console.error("Failed to fetch reference images", error);
+            }
         }
-        if (mode === 'miniature' && miniatureMode === 'icons' && iconItems.filter(i => i.enabled).length === 0) {
-            alert("Please select at least one icon!");
-            return;
-        }
-        const fullPrompt = `${contentPrompt}\n\n${stylePrompt}`;
-        onGenerate(fullPrompt, aspectRatio);
+
+        onGenerate(fullPrompt, aspectRatio, refImages);
     };
 
     const handleGenerateEncyclopediaItems = async (cityNameOverride?: string) => {
@@ -354,9 +428,10 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
 
         try {
             const items = await generateCityEncyclopediaList(cityToUse);
-            const formattedItems = items.map((text, idx) => ({
+            const formattedItems = items.map((item, idx) => ({
                 id: idx.toString(),
-                text: text,
+                name: item.name,
+                description: item.description,
                 enabled: true
             }));
             setEncyclopediaItems(formattedItems);
@@ -369,9 +444,9 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
         }
     };
 
-    const handleEncyclopediaItemChange = (index: number, newValue: string) => {
+    const handleEncyclopediaItemChange = (index: number, field: 'name' | 'description', newValue: string) => {
         const newItems = [...encyclopediaItems];
-        newItems[index] = { ...newItems[index], text: newValue };
+        newItems[index] = { ...newItems[index], [field]: newValue };
         setEncyclopediaItems(newItems);
         setIsManuallyEdited(false);
     };
@@ -387,6 +462,32 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
         const newItems = encyclopediaItems.map(item => ({ ...item, enabled: enable }));
         setEncyclopediaItems(newItems);
         setIsManuallyEdited(false);
+    };
+
+    // Download Encyclopedia as Markdown
+    const handleDownloadMarkdown = () => {
+        const locationObj = ALL_LOCATIONS.find(l => l.id === selectedLocationId);
+        const cityName = locationObj?.name || 'Encyclopedia';
+        const enabledItems = encyclopediaItems.filter(i => i.enabled);
+
+        let markdown = `# ${cityName} Encyclopedia\n\n`;
+        markdown += `> Generated on ${new Date().toLocaleDateString()}\n\n`;
+        markdown += `---\n\n`;
+
+        enabledItems.forEach((item, idx) => {
+            markdown += `## ${idx + 1}. ${item.name}\n\n`;
+            markdown += `${item.description}\n\n`;
+        });
+
+        const blob = new Blob([markdown], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${cityName.toLowerCase().replace(/\s+/g, '-')}-encyclopedia.md`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     // Icon Items Handlers
@@ -491,6 +592,38 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
                                 </button>
                             ))}
                         </div>
+
+                        {/* Reference Image Preview (Image Ref Mode Only) */}
+                        {renderStyle === 'image_ref' && (
+                            <div className="mt-2 animate-fade-in bg-indigo-50 border border-indigo-100 rounded-lg p-2">
+                                <label className="text-[9px] font-bold text-indigo-500 uppercase flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-1">
+                                        <span>Reference Group</span>
+                                        <span className="text-[8px] bg-indigo-200 px-1 rounded text-indigo-700">AUTO-FETCH</span>
+                                    </div>
+                                    {/* Group Switcher */}
+                                    <select
+                                        value={selectedRefGroupId}
+                                        onChange={(e) => setSelectedRefGroupId(e.target.value)}
+                                        className="text-[10px] border border-indigo-200 rounded px-1 py-0.5 bg-white text-indigo-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    >
+                                        {REFERENCE_GROUPS.map(g => (
+                                            <option key={g.id} value={g.id}>{g.name}</option>
+                                        ))}
+                                    </select>
+                                </label>
+
+                                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                                    {(REFERENCE_GROUPS.find(g => g.id === selectedRefGroupId)?.images || []).map((img, idx) => (
+                                        <div key={idx} className="relative w-12 h-12 flex-shrink-0 rounded-md overflow-hidden border border-indigo-200 shadow-sm group">
+                                            <img src={img} alt="Ref" className="w-full h-full object-cover" />
+                                            {/* Hover Zoom */}
+                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -597,27 +730,40 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
                                     {isGeneratingItems && encyclopediaItems.length === 0 ? (
                                         <div className="p-8 flex flex-col items-center justify-center border border-dashed border-gray-300 rounded-lg bg-gray-50">
                                             <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-2"></div>
-                                            <span className="text-[10px] text-gray-500 font-medium">Drafting 24 Items...</span>
+                                            <span className="text-[10px] text-gray-500 font-medium">Drafting 24 Items with Descriptions...</span>
                                         </div>
                                     ) : (
                                         <>
-                                            <div className="grid grid-cols-1 gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200 max-h-[300px] overflow-y-auto custom-scrollbar">
+                                            <div className="grid grid-cols-1 gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200 max-h-[400px] overflow-y-auto custom-scrollbar">
                                                 {encyclopediaItems.map((item, idx) => (
-                                                    <div key={idx} className={`flex gap-2 items-center p-1 rounded transition-colors ${item.enabled ? 'opacity-100' : 'opacity-50'}`}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={item.enabled}
-                                                            onChange={() => toggleEncyclopediaItem(idx)}
-                                                            className="w-3 h-3 text-indigo-600 rounded cursor-pointer"
-                                                        />
-                                                        <span className="text-[9px] font-bold text-gray-400 w-4 text-right">{idx + 1}.</span>
-                                                        <input
-                                                            type="text"
-                                                            value={item.text}
-                                                            disabled={!item.enabled}
-                                                            onChange={(e) => handleEncyclopediaItemChange(idx, e.target.value)}
-                                                            className="flex-1 bg-white border border-gray-200 rounded px-2 py-1.5 text-[10px] text-gray-700 focus:border-indigo-500 outline-none disabled:bg-transparent disabled:border-transparent"
-                                                        />
+                                                    <div key={idx} className={`p-2 rounded-lg border transition-colors ${item.enabled ? 'bg-white border-gray-200' : 'bg-gray-100 border-gray-100 opacity-50'}`}>
+                                                        <div className="flex gap-2 items-center">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={item.enabled}
+                                                                onChange={() => toggleEncyclopediaItem(idx)}
+                                                                className="w-3 h-3 text-indigo-600 rounded cursor-pointer"
+                                                            />
+                                                            <span className="text-[9px] font-bold text-gray-400 w-4 text-right">{idx + 1}.</span>
+                                                            <input
+                                                                type="text"
+                                                                value={item.name}
+                                                                disabled={!item.enabled}
+                                                                onChange={(e) => handleEncyclopediaItemChange(idx, 'name', e.target.value)}
+                                                                className="flex-1 bg-transparent border-none font-medium px-1 py-0.5 text-[11px] text-gray-800 focus:bg-indigo-50 rounded outline-none disabled:bg-transparent"
+                                                                placeholder="Item name"
+                                                            />
+                                                        </div>
+                                                        <div className="ml-8 mt-1">
+                                                            <textarea
+                                                                value={item.description}
+                                                                disabled={!item.enabled}
+                                                                onChange={(e) => handleEncyclopediaItemChange(idx, 'description', e.target.value)}
+                                                                className="w-full bg-transparent border border-dashed border-gray-200 rounded px-2 py-1 text-[10px] text-gray-500 focus:border-indigo-300 focus:bg-indigo-50 outline-none resize-none disabled:bg-transparent disabled:border-transparent"
+                                                                placeholder="Fun factual story (Markdown only)"
+                                                                rows={2}
+                                                            />
+                                                        </div>
                                                     </div>
                                                 ))}
                                                 {encyclopediaItems.length === 0 && !isGeneratingItems && (
@@ -626,8 +772,18 @@ const SceneGeneratorInputs: React.FC<SceneGeneratorProps> = ({ onGenerate, isGen
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="text-[10px] text-right text-gray-500 font-bold">
-                                                Total Selected: <span className="text-indigo-600">{encyclopediaItems.filter(i => i.enabled).length}</span>
+                                            <div className="flex items-center justify-between mt-2">
+                                                <div className="text-[10px] text-gray-500 font-bold">
+                                                    Total Selected: <span className="text-indigo-600">{encyclopediaItems.filter(i => i.enabled).length}</span>
+                                                </div>
+                                                <button
+                                                    onClick={handleDownloadMarkdown}
+                                                    disabled={encyclopediaItems.filter(i => i.enabled).length === 0}
+                                                    className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-[10px] font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                                    Download .md
+                                                </button>
                                             </div>
                                         </>
                                     )}

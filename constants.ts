@@ -328,9 +328,15 @@ export const SCENE_SEASONS = [
 
 // --- RENDER STYLE OPTIONS ---
 // Two material rendering styles: Soft Flocked (default) and Soft Clay
-export type RenderStyleId = 'flocked' | 'clay';
+export type RenderStyleId = 'standard' | 'flocked' | 'clay' | 'image_ref';
 
 export const RENDER_STYLES: { id: RenderStyleId; name: string; emoji: string; materialPrompt: string }[] = [
+  {
+    id: 'standard',
+    name: 'Standard',
+    emoji: '🎲',
+    materialPrompt: ''
+  },
   {
     id: 'flocked',
     name: 'Soft Flocked',
@@ -338,7 +344,7 @@ export const RENDER_STYLES: { id: RenderStyleId; name: string; emoji: string; ma
     materialPrompt: `**[Material Rendering — Soft Flocked/Felt]**
 * **Primary Texture:** Subtle flocked/velvet surface on appropriate areas (plush items, organic forms). Light felt-like softness.  
 * **Application:** Use sparingly and naturally — NOT everything should be fuzzy. Hard surfaces (wood, ceramic) remain matte but with warm, handcrafted feel.
-* **Subsurface Scattering:** Soft rim lighting on edges. Gentle SSS glow for warmth and depth.
+* **Subsurface Scattering:** Gentle SSS glow for warmth and depth.
 * **Finish:** Matte, never glossy. Natural material appearance.`
   },
   {
@@ -350,6 +356,17 @@ export const RENDER_STYLES: { id: RenderStyleId; name: string; emoji: string; ma
 * **Application:** Painted wood, matte ceramic, unvarnished surfaces. Think hand-sculpted pottery or wooden toys.
 * **Ambient Occlusion:** Deep creases, grounded shadows for volumetric feel.
 * **Finish:** Matte, never glossy. Natural handcrafted warmth.`
+  },
+  {
+    id: 'image_ref',
+    name: 'Image Ref',
+    emoji: '🖼️',
+    materialPrompt: `**[Style Reference — Image Based]**
+> **CRITICAL INSTRUCTION**: The user has provided reference images to define the VISUAL STYLE (lighting, texture, material, color palette, rendering fidelity).
+> 1. **IGNORE THE CONTENT** of the reference images. Do not generate the objects shown in the references.
+> 2. **MATCH THE STYLE** of the reference images exactly. Adopt their specific lighting softness, material texture, and rendering aesthetic.
+> 3. **GENERATE THE SUBJECT**: Generate the specific object described in the main prompt, but render it AS IF it belongs in the same world/collection as the reference images.
+> 4. **VIEWPOINT**: Maintain the camera angle requested in the main prompt.`
   }
 ];
 
@@ -361,37 +378,37 @@ export const UNIFIED_ELEMENT_THEMES = [
   {
     id: 'soft_bakery',
     name: 'Soft Bakery',
-    prompt: 'Style: Warm, cozy bakery atmosphere with soft rounded shapes and comforting earthy tones.'
+    prompt: 'Soft Bakery'
   },
   {
     id: 'gorpcore',
     name: 'Gorpcore',
-    prompt: 'Style: Rugged outdoor adventure gear aesthetic with functional, utilitarian vibes.'
+    prompt: 'Gorpcore'
   },
   {
     id: 'lofi_vinyl',
     name: 'Lo-Fi Vinyl',
-    prompt: 'Style: Nostalgic 90s retro electronics vibe with playful, chunky forms.'
+    prompt: 'Lo-Fi Vinyl'
   },
   {
     id: 'tennis',
     name: 'Tennis Club',
-    prompt: 'Style: Country club tennis court vibes — crisp whites, grass green accents, and sporty elegance.'
+    prompt: 'Tennis Club'
   },
   {
     id: 'preppy_academy',
     name: 'Preppy Academy',
-    prompt: 'Style: Ivy league campus aesthetic — warm wood, leather details, tartan patterns, and scholarly charm.'
+    prompt: 'Preppy Academy'
   },
   {
     id: 'natural_linen',
     name: 'Natural Linen',
-    prompt: 'Style: Organic, breathable linen textures with muted earth tones and handcrafted warmth.'
+    prompt: 'Natural Linen'
   },
   {
     id: 'coastal_summer',
     name: 'Coastal Summer',
-    prompt: 'Style: Beachy, sun-bleached vibes with ocean blues, sand tones, and relaxed nautical charm.'
+    prompt: 'Coastal Summer'
   }
 ];
 
@@ -400,6 +417,7 @@ export const INTERIOR_SLOTS = [
     id: 'rest',
     name: 'Rest Area',
     icon: '🛏️',
+    cameraInstruction: '(Strict Front View. One-point perspective. 0-degree azimuth. Slight 5-10 degree elevation to show surface. No isometric.)',
     options: [
       { id: 'single_bed', name: 'Single Bed' },
       { id: 'sofa_bed', name: 'Sofa Bed' },
@@ -412,6 +430,7 @@ export const INTERIOR_SLOTS = [
     id: 'workstation',
     name: 'Workstation',
     icon: '🍳',
+    cameraInstruction: '(Strict Front View. One-point perspective. 0-degree azimuth. Slight 5-10 degree elevation to show surface. No isometric.)',
     options: [
       { id: 'kitchen_counter', name: 'Kitchen Counter with Sink' },
       { id: 'study_desk', name: 'Study Desk' },
@@ -424,6 +443,7 @@ export const INTERIOR_SLOTS = [
     id: 'floor_decor',
     name: 'Floor Decor',
     icon: '🎸',
+    cameraInstruction: '(Strict Front view, 0 degree pitch)',
     options: [
       { id: 'ukulele', name: 'Ukulele / Guitar' },
       { id: 'floor_plant', name: 'Floor Plant Pot' },
@@ -436,6 +456,7 @@ export const INTERIOR_SLOTS = [
     id: 'floor_cover',
     name: 'Floor Cover',
     icon: '🟤',
+    cameraInstruction: '(Front view, slight 10 degree top-down angle)',
     options: [
       { id: 'round_rug', name: 'Round Rug' },
       { id: 'square_rug', name: 'Square Woven Rug' },
@@ -447,6 +468,7 @@ export const INTERIOR_SLOTS = [
     id: 'wall_decor',
     name: 'Wall Decor',
     icon: '🖼️',
+    cameraInstruction: '(Strict Front view, flat)',
     options: [
       { id: 'wall_shelf', name: 'Wall Shelf with Small Items' },
       { id: 'poster_wall', name: 'Poster Collage' },
@@ -459,6 +481,7 @@ export const INTERIOR_SLOTS = [
     id: 'window',
     name: 'Window View',
     icon: '🪟',
+    cameraInstruction: '(Strict Front view, flat, 0 degree pitch)',
     options: [
       { id: 'arch_window', name: 'Arched Window' },
       { id: 'panoramic', name: 'Panoramic Window' },
@@ -470,6 +493,7 @@ export const INTERIOR_SLOTS = [
     id: 'ceiling',
     name: 'Ceiling Light',
     icon: '💡',
+    cameraInstruction: '(Low angle view, looking up 15 degrees from below)',
     options: [
       { id: 'pendant_lamp', name: 'Pendant Lamp' },
       { id: 'paper_lantern', name: 'Paper Lantern' },
@@ -515,30 +539,30 @@ export const VEHICLE_TYPES = [
 
 // --- Miniature / Icon Mode Constants ---
 export const MINIATURE_THEMES = [
-  { id: 'chiang_mai', name: 'Chiang Mai (Thai)', prompt: 'Chiang Mai vibe. Keywords: Temples, Elephants, Tropical, Lanterns.' },
-  { id: 'sicily', name: 'Sicily (Italy)', prompt: 'Sicily / Amalfi vibe. Keywords: Lemons, Coast, Blue Tiles, Scooters.' },
-  { id: 'hawaii', name: 'Hawaii (USA)', prompt: 'Hawaii vibe. Keywords: Volcano, Surf, Tiki, Hibiscus.' },
-  { id: 'tokyo', name: 'Tokyo (Japan)', prompt: 'Tokyo vibe. Keywords: Neon, Vending Machines, Cherry Blossoms, Cyber-pop.' },
-  { id: 'paris', name: 'Paris (France)', prompt: 'Paris vibe. Keywords: Cafe, Eiffel, Wrought Iron, Bakery.' },
-  { id: 'nyc', name: 'New York (USA)', prompt: 'NYC vibe. Keywords: Taxis, Brownstones, Urban, Brick.' },
-  { id: 'london', name: 'London (UK)', prompt: 'London vibe. Keywords: Big Ben, Red Bus, Phone Booth, Rainy.' },
-  { id: 'kyoto', name: 'Kyoto (Japan)', prompt: 'Kyoto vibe. Keywords: Shrines, Bamboo, Torii Gates, Traditional.' },
-  { id: 'santorini', name: 'Santorini (Greece)', prompt: 'Santorini vibe. Keywords: Blue Domes, White Walls, Sea, Bougainvillea.' },
+  { id: 'chiang_mai', name: 'Chiang Mai (Thai)', prompt: 'Chiang Mai, Thailand. Authentic local atmosphere.' },
+  { id: 'sicily', name: 'Sicily (Italy)', prompt: 'Sicily, Italy. Mediterranean coast atmosphere.' },
+  { id: 'hawaii', name: 'Hawaii (USA)', prompt: 'Hawaii, USA. Tropical island atmosphere.' },
+  { id: 'tokyo', name: 'Tokyo (Japan)', prompt: 'Tokyo, Japan. Modern city atmosphere.' },
+  { id: 'paris', name: 'Paris (France)', prompt: 'Paris, France. Classic European city atmosphere.' },
+  { id: 'nyc', name: 'New York (USA)', prompt: 'New York City, USA. Urban metropolis atmosphere.' },
+  { id: 'london', name: 'London (UK)', prompt: 'London, UK. Historic city atmosphere.' },
+  { id: 'kyoto', name: 'Kyoto (Japan)', prompt: 'Kyoto, Japan. Traditional cultural atmosphere.' },
+  { id: 'santorini', name: 'Santorini (Greece)', prompt: 'Santorini, Greece. Aegean island atmosphere.' },
 ];
 
 export const DEFAULT_WORLD_CITIES = [
-  'Chiang Mai, Thailand (Temples & Elephants)',
-  'Sicily, Italy (Lemons & Coast)',
-  'Hawaii, USA (Volcano & Surf)',
-  'Tokyo, Japan (Neon & Cherry Blossoms)',
-  'Paris, France (Eiffel & Cafes)',
-  'New York City, USA (Taxis & Brownstones)',
-  'London, UK (Big Ben & Red Buses)',
-  'Kyoto, Japan (Shrines & Bamboo)',
-  'Santorini, Greece (Blue Domes & Sea)',
-  'Cairo, Egypt (Pyramids & Desert)',
-  'Rio de Janeiro, Brazil (Christ & Beach)',
-  'Amsterdam, Netherlands (Canals & Tulips)'
+  'Chiang Mai, Thailand',
+  'Sicily, Italy',
+  'Hawaii, USA',
+  'Tokyo, Japan',
+  'Paris, France',
+  'New York City, USA',
+  'London, UK',
+  'Kyoto, Japan',
+  'Santorini, Greece',
+  'Cairo, Egypt',
+  'Rio de Janeiro, Brazil',
+  'Amsterdam, Netherlands'
 ];
 
 export const ICON_THEMES = [
@@ -575,6 +599,64 @@ export const SCENE_ASPECT_RATIOS = [
 ];
 
 // --- SPLIT SCENE PROMPTS INTO CONTENT & STYLE ---
+
+// Define RENDER_STYLE_TEMPLATES object
+export const RENDER_STYLE_TEMPLATES = {
+  STANDARD: ``, // Placeholder for standard style, assuming it's defined elsewhere or empty
+  CLAY: `**[Visual Style Definition]**
+Style is 3D game asset render inspired by Animal Crossing: New Horizons.
+**IMPORTANT: Mimic ACNH's visual TEXTURE and QUALITY only — NOT specific element designs. Reference the rendering quality, not the art assets.**
+* **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Objects have visible thickness and volume.
+* **Texture:** Soft, matte, slightly textured clay-like finish. Colors should be muted and pastel, like air-dry clay.
+* **Lighting:** Soft, warm environmental lighting with gentle ambient occlusion. Subtle color bounce as if lit by a sunny window. No harsh studio lighting.
+
+**Negative Prompt:** isometric, 3/4 view, angled view, diagonal angle, perspective distortion, characters, people, animals, villagers, touching edges, overlapping, flat 2D vector, lineless art, harsh outlines, realistic high-detail texture, noise, complex background, cast shadow, drop shadow, contact shadow, plastic, glossy, shiny, metallic, reflective, sharp edges, vibrant colors, dark colors.`,
+  FLOCKED: `**[Visual Style Definition]**
+Style is 3D game asset render inspired by Animal Crossing: New Horizons.
+**IMPORTANT: Mimic ACNH's visual TEXTURE and QUALITY only — NOT specific element designs. Reference the rendering quality, not the art assets.**
+* **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Objects have visible thickness and volume.
+* **Texture:** Soft, fuzzy, flocked texture, like a velvet toy. Colors should be warm and inviting.
+* **Lighting:** Soft, warm environmental lighting with gentle ambient occlusion. Subtle color bounce as if lit by a sunny window. No harsh studio lighting.
+
+**Negative Prompt:** isometric, 3/4 view, angled view, diagonal angle, perspective distortion, characters, people, animals, villagers, touching edges, overlapping, flat 2D vector, lineless art, harsh outlines, realistic high-detail texture, noise, complex background, cast shadow, drop shadow, contact shadow, plastic, glossy, shiny, metallic, reflective, sharp edges, smooth texture, hard surface.`,
+  IMAGE_REF: `**[Style Reference — Image Based]**
+> **CRITICAL INSTRUCTION**: The user has provided reference images to define the VISUAL STYLE (lighting, texture, material, color palette, rendering fidelity).
+> 1. **IGNORE THE CONTENT** of the reference images. Do not generate the objects shown in the references.
+> 2. **MATCH THE STYLE** of the reference images exactly. Adopt their specific lighting softness, material texture, and rendering aesthetic.
+> 3. **GENERATE THE SUBJECT**: Generate the specific object described in the main prompt, but render it AS IF it belongs in the same world/collection as the reference images.
+> 4. **VIEWPOINT**: Maintain the camera angle requested in the main prompt.
+`
+};
+
+export interface ReferenceGroup {
+  id: string;
+  name: string;
+  images: string[];
+}
+
+export const REFERENCE_GROUPS: ReferenceGroup[] = [
+  {
+    id: 'default',
+    name: 'Soft Clay (Default)',
+    images: [
+      '/assets/ref/ref1.png',
+      '/assets/ref/ref2.png',
+      '/assets/ref/ref3.png',
+      '/assets/ref/ref4.png'
+    ]
+  },
+  {
+    id: 'group2',
+    name: 'Vibrant Pop (Group 2)',
+    images: [
+      '/assets/ref/group2/task_01kdqww684fm0baj70jym1anej_1767107362_img_0.webp',
+      '/assets/ref/group2/task_01kdwqveygfv5vvvknc5pmgm5b_1767269867_img_1.webp',
+      '/assets/ref/group2/task_01kgcq03rvfb1atrw0r0c4g260_1769953371_img_1.webp'
+    ]
+  }
+];
+
+export const REFERENCE_IMAGES = REFERENCE_GROUPS[0].images;
 
 // 1. Landscape
 export const ACNH_SCENE_CONTENT_TEMPLATE = `Create a full-screen, immersive environmental landscape in the art style of Animal Crossing: New Horizons.
@@ -618,10 +700,7 @@ Visual Style & Atmosphere:
 Negative Prompt: characters, people, animals, villagers, white background, studio background, miniature, toy model, trees, plants, flowers, bushes, leaves, grass blades, vegetation, trunk, branch, foreground objects, clutter, mountains, rock formations, steep hills.`;
 
 // 3. Furniture
-export const ACNH_FURNITURE_CONTENT_TEMPLATE = `**[CRITICAL CAMERA REQUIREMENT]**
-**Orthographic Frontal View ONLY.** Every item must be rendered from a dead-on frontal angle (0° elevation). NO 3/4 view, NO isometric, NO diagonal angles, NO perspective distortion.
-
-**[Asset Definition & Layout]**
+export const ACNH_FURNITURE_CONTENT_TEMPLATE = `**[Asset Definition & Layout]**
 A game asset sprite sheet containing isolated furniture elements. Items are arranged in a neat grid (Knolling style), completely separated with no overlaps.
 **Background:** Solid pure white background.
 
@@ -727,10 +806,10 @@ Style is 3D game asset render inspired by Animal Crossing: New Horizons.
 **IMPORTANT: Mimic ACNH's visual TEXTURE and QUALITY only — NOT specific element designs. Reference the rendering quality, not the art assets.**
 * **Concept:** Cute, chunky, soft cultural artifacts and local treasures.
 * **Geometry:** Soft, chunky, highly rounded geometry with distinct, friendly silhouettes. No sharp edges. Objects have visible thickness and volume.
-* **Texture:** Natural material feel — painted wood, ceramic, woven fabric. Warm, handcrafted appearance. Avoid plastic or glossy surfaces.
-* **Lighting:** Soft, warm environmental lighting with gentle ambient occlusion. Subtle color bounce as if lit by a cozy window. No harsh studio lighting.
+* **Texture:** Standard game asset finish. Smooth, clean surfaces. **Texture details will be defined by the material prompt.**
+* **Lighting:** Soft, warm environmental lighting with gentle ambient occlusion. Subtle color bounce as if lit by a sunny window. No harsh studio lighting.
 
-**Negative Prompt:** isometric, 3/4 view, angled view, diagonal angle, perspective distortion, characters, people, animals, villagers, touching edges, overlapping, flat 2D vector, lineless art, harsh outlines, text, labels, watermark, realistic food, photorealistic, sharp edges, cast shadow, drop shadow, contact shadow, plastic, shiny, glossy.`;
+**Negative Prompt:** isometric, 3/4 view, angled view, diagonal angle, perspective distortion, characters, people, animals, villagers, touching edges, overlapping, flat 2D vector, lineless art, harsh outlines, text, labels, watermark, realistic food, photorealistic, sharp edges, cast shadow, drop shadow, contact shadow, plastic, shiny, glossy, realistic high-detail texture, noise, complex background, warm vintage filter, grainy, dirty, scratched, worn.`;
 
 // 8. Miniature Icon
 export const MINIATURE_ICON_CONTENT_TEMPLATE = `**[CRITICAL CAMERA REQUIREMENT]**

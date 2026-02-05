@@ -51,12 +51,25 @@ const SceneResults: React.FC<SceneResultsProps> = ({ currentImage, history, isGe
                             <>
                                 <img src={currentImage} alt="Scene Result" className="w-full h-full object-contain bg-gray-100" />
 
-                                {/* Resolution Badge */}
-                                {currentHistoryItem?.imageSize && (
-                                    <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-md">
-                                        {currentHistoryItem.imageSize}
-                                    </div>
-                                )}
+                                {/* Metadata Badges */}
+                                <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
+                                    {currentHistoryItem?.imageSize && (
+                                        <div className="bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-md">
+                                            {currentHistoryItem.imageSize}
+                                        </div>
+                                    )}
+                                    {currentHistoryItem?.seed !== undefined && (
+                                        <div className="bg-black/60 backdrop-blur-sm text-white text-[9px] font-mono px-2 py-1 rounded-md flex gap-2">
+                                            <span className="opacity-50">SEED</span>
+                                            <span>{currentHistoryItem.seed}</span>
+                                        </div>
+                                    )}
+                                    {currentHistoryItem?.model && (
+                                        <div className="bg-indigo-600/80 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-1 rounded-md uppercase">
+                                            {currentHistoryItem.model.replace('gemini-', '').replace('pro', 'Pro').replace('flash', 'Flash').split('-')[0]}
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Overlay Actions */}
                                 <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between">
@@ -66,13 +79,59 @@ const SceneResults: React.FC<SceneResultsProps> = ({ currentImage, history, isGe
                                     >
                                         {showPrompt ? 'Hide Info' : 'Show Prompt'}
                                     </button>
-                                    <a
-                                        href={currentImage}
-                                        download={`scene-${Date.now()}.png`}
+                                    <button
+                                        onClick={() => {
+                                            if (!currentImage) return;
+                                            console.log("Starting download process (Sync Force)...");
+
+                                            try {
+                                                const link = document.createElement('a');
+                                                let blob: Blob;
+
+                                                // 1. Synchronous conversion for Data URIs to preserve user gesture
+                                                if (currentImage.startsWith('data:')) {
+                                                    const byteString = atob(currentImage.split(',')[1]);
+                                                    const mimeString = currentImage.split(',')[0].split(':')[1].split(';')[0];
+                                                    const ab = new ArrayBuffer(byteString.length);
+                                                    const ia = new Uint8Array(ab);
+                                                    for (let i = 0; i < byteString.length; i++) {
+                                                        ia[i] = byteString.charCodeAt(i);
+                                                    }
+                                                    blob = new Blob([ab], { type: mimeString });
+                                                    console.log("Sync Blob created:", blob.type, blob.size);
+                                                } else {
+                                                    // Fallback for real URLs - force download if possible, or new tab
+                                                    // Since we can't fetch synchronously in main thread, and async might kill gesture,
+                                                    // we trust the browser for simple href download or window.open
+                                                    window.open(currentImage, '_blank');
+                                                    return;
+                                                }
+
+                                                // 2. Create URL and Trigger
+                                                const url = URL.createObjectURL(blob);
+                                                link.href = url;
+                                                const ext = blob.type.split('/')[1] || 'png';
+                                                link.download = `scene-${Date.now()}.${ext}`;
+
+                                                document.body.appendChild(link);
+                                                link.click();
+
+                                                // 3. Deferred Cleanup
+                                                setTimeout(() => {
+                                                    document.body.removeChild(link);
+                                                    URL.revokeObjectURL(url);
+                                                    console.log("Cleanup done");
+                                                }, 500); // 500ms usually enough for sync actions
+
+                                            } catch (e) {
+                                                console.error('Download failed', e);
+                                                alert("Download Error: " + (e as any).message);
+                                            }
+                                        }}
                                         className="bg-white text-gray-900 px-5 py-2 rounded-full text-xs font-black shadow-lg hover:scale-105 transition-transform"
                                     >
                                         DOWNLOAD
-                                    </a>
+                                    </button>
                                 </div>
 
                                 {/* Prompt Overlay */}

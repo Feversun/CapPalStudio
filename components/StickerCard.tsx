@@ -56,11 +56,25 @@ const StickerCard: React.FC<StickerCardProps> = ({ sticker, onClick, onRegenerat
       onClick={() => isCompleted && onClick && onClick(sticker)}
     >
       {/* Emotion Label */}
-      <div className="absolute top-2 left-2 z-10">
+      <div className="absolute top-2 left-2 z-10 flex flex-col items-start gap-1">
         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-900/60 backdrop-blur-sm rounded-full text-white text-xs font-medium">
           <span>{sticker.emoji}</span>
           <span>{sticker.emotion}</span>
         </div>
+        {/* Metadata (Only on Hover/Completed) */}
+        {isCompleted && sticker.seed !== undefined && (
+          <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div className="bg-black/60 backdrop-blur-sm text-white text-[8px] font-mono px-1.5 py-0.5 rounded flex gap-1">
+              <span className="opacity-50">SEED</span>
+              <span>{sticker.seed}</span>
+            </div>
+            {sticker.model && (
+              <div className="self-start bg-indigo-600/80 backdrop-blur-sm text-white text-[8px] font-bold px-1.5 py-0.5 rounded uppercase">
+                {sticker.model.replace('gemini-', '').replace('pro', 'Pro').replace('flash', 'Flash').split('-')[0]}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Actions (Only visible on hover/completed) */}

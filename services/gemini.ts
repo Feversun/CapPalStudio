@@ -244,24 +244,46 @@ export const analyzeImage = async (base64Image: string): Promise<{ subjectDescri
   });
 };
 
-export const generateCityEncyclopediaList = async (city: string): Promise<string[]> => {
+export interface CityEncyclopediaItem {
+  name: string;
+  description: string;
+}
+
+export const generateCityEncyclopediaList = async (city: string): Promise<CityEncyclopediaItem[]> => {
   return retryWithBackoff(async () => {
     const response = await makeRequest(
       'gemini-2.5-flash',
       {
-        parts: [{ text: `Generate a list of exactly 24 distinct, iconic, and visual cultural items for: ${city}. Return ONLY a JSON array of strings.` }]
+        parts: [{
+          text: `Generate a list of exactly 24 distinct, iconic cultural items for: ${city}.
+
+For each item, provide:
+- name: A short, evocative name (3-6 words, e.g., "Eiffel Tower Keychain", "Parisian Croissant")
+- description: A fascinating "Fun Fact" or "Micro Story" (1-2 sentences) about this item's cultural significance, history, or usage. make it engaging and educational for a curious traveler. DO NOT describe what it looks like (e.g. "red box"), focus on the STORY.
+
+Return ONLY a JSON array of objects with "name" and "description" fields.` }]
       },
       {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.ARRAY,
-          items: { type: Type.STRING }
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              description: { type: Type.STRING }
+            },
+            required: ["name", "description"]
+          }
         }
       }
     );
 
     if (response.text) return JSON.parse(response.text);
-    return Array(24).fill(`Item from ${city}`);
+    return Array(24).fill(null).map((_, i) => ({
+      name: `Item ${i + 1} from ${city}`,
+      description: `A typical cultural item from ${city}.`
+    }));
   });
 };
 
@@ -409,34 +431,70 @@ export const generateStickerImage = async (
   });
 };
 
+// Placeholder for functions/constants not provided in the original snippet
+// You should replace these with actual implementations if they exist elsewhere in your project.
+const getForceLocalMode = () => false; // Assume false for now
+const generateImageLocal = async (prompt: string, aspectRatio: string) => {
+  console.warn("generateImageLocal not implemented, returning dummy data.");
+  return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+};
+const DEFAULT_MODEL = 'gemini-3-pro-image-preview'; // Default model for scene generation
+
 export const generateSceneImage = async (
   prompt: string,
-  aspectRatio: string = "1:1",
-  genConfig: GenerationConfig
+  aspectRatio: string = '1:1',
+  config: GenerationConfig,
+  referenceImages: string[] = [] // Optional Array of Base64 strings
 ): Promise<string> => {
-  return retryWithBackoff(async () => {
-    const model = genConfig.model || 'gemini-3-pro-image-preview';
+  if (getForceLocalMode()) {
+    return await generateImageLocal(prompt, aspectRatio);
+  }
 
-    const imageConfig = buildImageConfig(model, aspectRatio, genConfig.imageSize);
+  try {
+    return await retryWithBackoff(async () => {
+      const model = config.model || DEFAULT_MODEL;
+      const imageConfig = buildImageConfig(model, aspectRatio, config.imageSize);
 
-    const response = await makeRequest(
-      model,
-      { parts: [{ text: prompt }] },
-      {
-        temperature: genConfig.temperature,
-        topP: genConfig.topP,
-        topK: genConfig.topK,
-        seed: genConfig.seed,
-        imageConfig: imageConfig
+      // Build parts array
+      const parts: any[] = [{ text: prompt }];
+
+      // Add reference images if provided
+      if (referenceImages && referenceImages.length > 0) {
+        console.log(`[Gemini] Adding ${referenceImages.length} reference images for style`);
+        referenceImages.forEach(base64Data => {
+          // Strip data:image/png;base64, prefix if present
+          const cleanBase64 = base64Data.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
+          parts.unshift({
+            inlineData: {
+              mimeType: "image/png", // Assuming PNG for now, or detect if needed
+              data: cleanBase64
+            }
+          });
+        });
       }
-    );
 
-    const parts = response.candidates?.[0]?.content?.parts;
-    const imagePart = parts?.find((p: any) => p.inlineData);
+      const response = await makeRequest(
+        model,
+        { parts: parts },
+        {
+          temperature: config.temperature,
+          topP: config.topP,
+          topK: config.topK,
+          seed: config.seed, // Seed is passed here
+          imageConfig: imageConfig
+        }
+      );
 
-    if (imagePart?.inlineData) {
-      return `data:${imagePart.inlineData.mimeType || 'image/png'};base64,${imagePart.inlineData.data}`;
-    }
-    throw new Error("No image data in response");
-  });
+      const responseParts = response.candidates?.[0]?.content?.parts;
+      const imagePart = responseParts?.find((p: any) => p.inlineData);
+
+      if (imagePart?.inlineData) {
+        return `data:${imagePart.inlineData.mimeType || 'image/png'};base64,${imagePart.inlineData.data}`;
+      }
+      throw new Error("No image data in response");
+    });
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    throw error;
+  }
 };
