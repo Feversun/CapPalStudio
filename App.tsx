@@ -10,7 +10,7 @@ import {
   MASTER_SHEET_PROMPT_TEMPLATE, SHARED_TECHNICAL_PROMPT, SHARED_NEGATIVE_PROMPT,
   WIDGET_SCENARIOS
 } from './constants';
-import { analyzeImage, generateStickerImage, generateSceneImage, generateMasterCharacter, setForceLocalMode } from './services/gemini';
+import { analyzeImage, generateStickerImage, generateSceneImage, generateMasterCharacter, setForceLocalMode } from './services/cappal-api';
 import { saveState, loadState } from './services/db';
 import { saveToHistory, getHistory, getHistoryByMode, HistoryItem } from './services/historyDB';
 

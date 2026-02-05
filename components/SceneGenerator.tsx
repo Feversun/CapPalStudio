@@ -21,7 +21,7 @@ import {
     REFERENCE_GROUPS // Import new groups constant
 } from '../constants';
 import { PromptVersion } from '../types';
-import { generateCityEncyclopediaList, CityEncyclopediaItem } from '../services/gemini';
+import { generateCityEncyclopediaList, CityEncyclopediaItem } from '../services/cappal-api';
 
 type SceneMode = 'landscape' | 'element' | 'miniature';
 type ElementSubMode = 'furniture' | 'vehicle' | 'outdoor';

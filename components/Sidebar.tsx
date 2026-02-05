@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { StickerStyle, GenerationMode, SheetGridConfig, PromptVersion, SheetMode, SheetActionItem, ConsistencyMode, GenerationConfig } from '../types';
 import { STYLES, PRESET_IMAGES, GET_MOTION_DESCRIPTION, WIDGET_SCENARIOS } from '../constants';
 import SceneGeneratorInputs from './SceneGenerator';
-import { setLocalBaseUrl, setLocalApiStyle } from '../services/gemini';
+import { setLocalBaseUrl, setLocalApiStyle } from '../services/cappal-api';
 
 interface SidebarProps {
   sourceImage: string | null;
@@ -83,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [viewPromptAsJson, setViewPromptAsJson] = useState(false);
 
   // Local URL State
-  const [localTunnelUrl, setLocalTunnelUrl] = useState("https://summit-product-arrested-crew.trycloudflare.com");
+  const [localTunnelUrl, setLocalTunnelUrl] = useState("http://localhost:8787");
   const [isUrlDirty, setIsUrlDirty] = useState(false);
   const [localApiStyle, setLocalApiStyleState] = useState<'gemini' | 'anthropic'>('gemini');
 
@@ -332,11 +332,11 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        {/* Local API Config URL Input */}
+        {/* CapPal API Base URL Input */}
         {isLocalApi && (
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 animate-fade-in -mt-2">
             <label className="text-[10px] font-bold text-orange-800 uppercase tracking-wider block mb-1">
-              Local Tunnel URL
+              CapPal API URL
             </label>
             <div className="flex gap-2">
               <input
@@ -347,7 +347,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   setIsUrlDirty(true);
                 }}
                 className="flex-1 text-[10px] px-2 py-1.5 border border-orange-200 rounded text-gray-600 focus:border-orange-500 outline-none font-mono"
-                placeholder="https://..."
+                placeholder="http://localhost:8787"
               />
               <button
                 onClick={() => {
