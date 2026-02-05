@@ -20,3 +20,7 @@ View your app in AI Studio: https://ai.studio/apps/drive/1V0Olahg69fSIPO0sEvDatQ
    `CAPPAL_API_HOST=0.0.0.0 CAPPAL_API_PORT=8787 npm run api`
 4. Run the app:
    `npm run dev`
+
+## Headless API on VPS
+
+See `DEPLOY_API.md` for the Tailscale-first VPS setup, environment variables, and systemd service.
